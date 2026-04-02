@@ -19,6 +19,7 @@ export const TicketForm: React.FC<TicketFormProps> = ({ initialData, onSubmit, o
     company: initialData?.company || 'Burger King',
     startDate: initialData?.startDate || '2023-10-27',
     endDate: initialData?.endDate || '2023-11-27',
+    assignee: initialData?.assignee || '',
   });
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -91,6 +92,22 @@ export const TicketForm: React.FC<TicketFormProps> = ({ initialData, onSubmit, o
               value={formData.company}
               onChange={(e) => setFormData({...formData, company: e.target.value})}
               className="flex-1 bg-transparent border-none focus:ring-0 text-xl text-gray-700 text-center"
+            />
+          </div>
+
+          {/* Assignee */}
+          <div className="flex items-center border-b border-gray-100 p-6">
+            <label htmlFor="assignee" className="w-32 flex items-center font-bold text-lg">
+              Assignee
+              <ChevronDown className="ml-auto mr-4 text-black" size={24} strokeWidth={3} />
+            </label>
+            <input
+              id="assignee"
+              type="text"
+              value={formData.assignee}
+              onChange={(e) => setFormData({...formData, assignee: e.target.value})}
+              className="flex-1 bg-transparent border-none focus:ring-0 text-xl text-gray-700 text-center"
+              placeholder="Assign to..."
             />
           </div>
 

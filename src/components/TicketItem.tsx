@@ -40,6 +40,14 @@ export const TicketItem: React.FC<TicketItemProps> = ({ ticket, onDelete }) => {
         </div>
       </div>
       <p className="text-gray-600 mb-4">{ticket.description}</p>
+      {ticket.assignee && (
+        <div className="flex items-center gap-2 mb-4 text-sm text-gray-700 font-medium">
+          <span className="text-gray-500">Assignee:</span>
+          <span className="bg-indigo-50 text-indigo-700 px-3 py-1 rounded-full border border-indigo-100">
+            {ticket.assignee}
+          </span>
+        </div>
+      )}
       <div className="flex justify-between items-center text-sm text-gray-500">
         <span>Created: {new Date(ticket.createdAt).toLocaleDateString()}</span>
         <div className="flex gap-2">

@@ -4,6 +4,16 @@ import { MemoryRouter } from 'react-router-dom';
 import App from '../../App';
 
 describe('Ticketing App with Routing', () => {
+  it('renders login page', () => {
+    render(
+      <MemoryRouter initialEntries={['/login']}>
+        <App />
+      </MemoryRouter>
+    );
+    expect(screen.getByText('WELCOME BACK')).toBeInTheDocument();
+    expect(screen.getByPlaceholderText('example@orchida-soft.com')).toBeInTheDocument();
+  });
+
   it('renders initial dummy tickets on home page', () => {
     render(
       <MemoryRouter>
@@ -11,6 +21,7 @@ describe('Ticketing App with Routing', () => {
       </MemoryRouter>
     );
     expect(screen.getByText('Fix login bug')).toBeInTheDocument();
+    expect(screen.getByText('Sami Mansour')).toBeInTheDocument();
     expect(screen.getByText('Update documentation')).toBeInTheDocument();
   });
 
