@@ -6,7 +6,8 @@ export const Sidebar = () => {
 
   const menuItems = [
     { icon: LayoutDashboard, label: 'Dashboard', path: '/dashboard' },
-    { icon: Ticket, label: 'Tickets', path: '/' },
+    { icon: Ticket, label: 'My Tickets', path: '/' },
+    { icon: Ticket, label: 'Assigned Ticket', path: '/assigned' },
     { icon: Settings, label: 'Settings', path: '/settings' },
   ];
 
@@ -14,7 +15,7 @@ export const Sidebar = () => {
     <div className="w-64 bg-white min-h-screen border-r border-gray-100 flex flex-col p-6 shadow-sm">
       <div className="mb-12 flex flex-col items-center">
         <div className="w-16 h-16 bg-gradient-to-br from-purple-500 to-pink-500 rounded-full flex items-center justify-center mb-2">
-          <span className="text-white font-bold text-xs text-center leading-tight">ORCHIDA SOFT<br/>BUSINESS SOLUTIONS</span>
+          <span className="text-white font-bold text-xs text-center leading-tight">ORCHIDA SOFT<br />BUSINESS SOLUTIONS</span>
         </div>
       </div>
 
@@ -23,9 +24,8 @@ export const Sidebar = () => {
           <Link
             key={item.label}
             to={item.path}
-            className={`flex items-center gap-3 px-4 py-2 rounded-lg transition-colors ${
-              location.pathname === item.path ? 'text-[#433878] font-bold' : 'text-[#7C7C7C]'
-            }`}
+            className={`flex items-center gap-3 px-4 py-2 rounded-lg transition-colors ${location.pathname === item.path ? 'text-[#433878] font-bold' : 'text-[#7C7C7C]'
+              }`}
           >
             <item.icon size={20} />
             <span>{item.label}</span>

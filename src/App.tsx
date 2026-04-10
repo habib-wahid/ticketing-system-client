@@ -3,6 +3,7 @@ import { Routes, Route } from 'react-router-dom';
 import type { Ticket } from './types/ticket';
 import { MainLayout } from './components/MainLayout';
 import { Home } from './pages/Home';
+import { AssignedTickets } from './pages/AssignedTickets';
 import { CreateTicket } from './pages/CreateTicket';
 import { EditTicket } from './pages/EditTicket';
 import { Login } from './pages/Login';
@@ -73,6 +74,14 @@ function App() {
         element={
           <MainLayout>
             <Home tickets={tickets} onDelete={handleDeleteTicket} />
+          </MainLayout>
+        }
+      />
+      <Route
+        path="/assigned"
+        element={
+          <MainLayout>
+            <AssignedTickets tickets={tickets} />
           </MainLayout>
         }
       />
