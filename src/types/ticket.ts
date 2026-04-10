@@ -5,6 +5,7 @@ export interface Ticket {
   description: string;
   priority: 'low' | 'medium' | 'high';
   status: 'open' | 'in-progress' | 'closed';
+  type?: 'incident' | 'problem' | 'question' | 'suggestion';
   product: string;
   employee: string;
   company: string;
@@ -12,4 +13,6 @@ export interface Ticket {
   endDate: string;
   assignee?: string;
   createdAt: string;
+  location?: string;
+  amount?: number;
 }

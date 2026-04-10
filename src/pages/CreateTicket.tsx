@@ -9,14 +9,12 @@ interface CreateTicketProps {
 export function CreateTicket({ onAdd }: CreateTicketProps) {
   const navigate = useNavigate();
   return (
-    <div className="max-w-4xl mx-auto">
-      <TicketForm
-        onSubmit={(data) => {
-          onAdd(data);
-          navigate('/');
-        }}
-        onCancel={() => navigate('/')}
-      />
-    </div>
+    <TicketForm
+      onSubmit={(data) => {
+        onAdd(data);
+        navigate('/');
+      }}
+      onCancel={() => navigate('/')}
+    />
   );
 }

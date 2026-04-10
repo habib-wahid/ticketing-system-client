@@ -25,15 +25,13 @@ export function EditTicket({
   }
 
   return (
-    <div className="max-w-4xl mx-auto">
-      <TicketForm
-        initialData={ticket}
-        onSubmit={(data) => {
-          onUpdate(ticket.id, data);
-          navigate('/');
-        }}
-        onCancel={() => navigate('/')}
-      />
-    </div>
+    <TicketForm
+      initialData={ticket}
+      onSubmit={(data) => {
+        onUpdate(ticket.id, data);
+        navigate('/');
+      }}
+      onCancel={() => navigate('/')}
+    />
   );
 }

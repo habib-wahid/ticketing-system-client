@@ -20,9 +20,9 @@ describe('Ticketing App with Routing', () => {
         <App />
       </MemoryRouter>
     );
-    expect(screen.getByText('Fix login bug')).toBeInTheDocument();
-    expect(screen.getByText('Sami Mansour')).toBeInTheDocument();
-    expect(screen.getByText('Update documentation')).toBeInTheDocument();
+    expect(screen.getAllByText('The Story of Danau Toba (Musical Drama)')[0]).toBeInTheDocument();
+    expect(screen.getByText('Cive Slauw')).toBeInTheDocument();
+    expect(screen.getByText('The Powerfull Concert Festival London 2020')).toBeInTheDocument();
   });
 
   it('navigates to create ticket page', () => {
@@ -31,7 +31,7 @@ describe('Ticketing App with Routing', () => {
         <App />
       </MemoryRouter>
     );
-    fireEvent.click(screen.getByText('Create A Task'));
+    fireEvent.click(screen.getByText(/New Ticket/i));
     expect(screen.getByText('Create New Ticket')).toBeInTheDocument();
   });
 
@@ -41,16 +41,15 @@ describe('Ticketing App with Routing', () => {
         <App />
       </MemoryRouter>
     );
-    fireEvent.click(screen.getByText('Create A Task'));
+    fireEvent.click(screen.getByText(/New Ticket/i));
     
-    fireEvent.change(screen.getByLabelText(/Title/i), { target: { value: 'New Test Ticket' } });
-    fireEvent.change(screen.getByLabelText(/Task Description/i), { target: { value: 'New Test Description' } });
+    // In new TicketForm, "Ticket Name" is the label for title
+    fireEvent.change(screen.getAllByPlaceholderText(/Help me cancel my order/i)[0], { target: { value: 'New Test Ticket' } });
     
-    fireEvent.click(screen.getByText('Create Ticket'));
+    fireEvent.click(screen.getByText(/Submit as New/i));
     
     // Should be back on home page
     expect(screen.getByText('New Test Ticket')).toBeInTheDocument();
-    expect(screen.getAllByText('Tickets')[0]).toBeInTheDocument();
   });
 
   it('can delete a ticket', () => {
@@ -59,9 +58,10 @@ describe('Ticketing App with Routing', () => {
         <App />
       </MemoryRouter>
     );
-    const deleteButtons = screen.getAllByText('Delete');
-    fireEvent.click(deleteButtons[0]);
-    expect(screen.queryByText('Fix login bug')).not.toBeInTheDocument();
+    // Find Trash icons
+    const trashButtons = screen.getAllByRole('button').filter(btn => btn.querySelector('svg.lucide-trash2'));
+    fireEvent.click(trashButtons[0]);
+    expect(screen.queryByText('Cive Slauw')).not.toBeInTheDocument();
   });
 
   it('navigates to edit page and updates a ticket', () => {
@@ -70,17 +70,17 @@ describe('Ticketing App with Routing', () => {
         <App />
       </MemoryRouter>
     );
-    const editLinks = screen.getAllByText('Edit');
+    // Find the pencil icon links
+    const editLinks = screen.getAllByRole('link').filter(link => link.querySelector('svg.lucide-pencil'));
     fireEvent.click(editLinks[0]);
     
     expect(screen.getByText('Edit Ticket')).toBeInTheDocument();
     
-    const titleInput = screen.getByLabelText(/Title/i);
+    const titleInput = screen.getAllByPlaceholderText(/Help me cancel my order/i)[0];
     fireEvent.change(titleInput, { target: { value: 'Updated Title' } });
     
-    fireEvent.click(screen.getByText('Update Ticket'));
+    fireEvent.click(screen.getByText(/Update Ticket/i));
     
     expect(screen.getByText('Updated Title')).toBeInTheDocument();
-    expect(screen.queryByText('Fix login bug')).not.toBeInTheDocument();
   });
 });

@@ -1,70 +1,68 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
+import { Pencil, Trash2 } from 'lucide-react';
 import type { Ticket } from '../types/ticket';
 
 interface TicketItemProps {
   ticket: Ticket;
   onDelete: (id: string) => void;
+  isSelected: boolean;
+  onSelect: (id: string) => void;
 }
 
-export const TicketItem: React.FC<TicketItemProps> = ({ ticket, onDelete }) => {
-  const getPriorityColor = (priority: Ticket['priority']) => {
-    switch (priority) {
-      case 'high': return 'bg-red-100 text-red-800';
-      case 'medium': return 'bg-yellow-100 text-yellow-800';
-      case 'low': return 'bg-green-100 text-green-800';
-      default: return 'bg-gray-100 text-gray-800';
-    }
+export const TicketItem: React.FC<TicketItemProps> = ({ ticket, onDelete, isSelected, onSelect }) => {
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString('en-GB'); // DD/MM/YYYY
   };
 
-  const getStatusColor = (status: Ticket['status']) => {
-    switch (status) {
-      case 'open': return 'bg-blue-100 text-blue-800';
-      case 'in-progress': return 'bg-orange-100 text-orange-800';
-      case 'closed': return 'bg-gray-100 text-gray-800';
-      default: return 'bg-gray-100 text-gray-800';
-    }
+  const formatDateTime = (dateString: string) => {
+    return new Date(dateString).toLocaleString('en-GB', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: true
+    });
   };
 
   return (
-    <div className="bg-white p-6 rounded-lg shadow-md border border-gray-200 mb-4 hover:shadow-lg transition-shadow">
-      <div className="flex justify-between items-start mb-2">
-        <h3 className="text-lg font-bold text-gray-900">{ticket.title}</h3>
-        <div className="flex gap-2">
-          <span className={`px-2 py-1 rounded text-xs font-semibold ${getPriorityColor(ticket.priority)}`}>
-            {ticket.priority.toUpperCase()}
-          </span>
-          <span className={`px-2 py-1 rounded text-xs font-semibold ${getStatusColor(ticket.status)}`}>
-            {ticket.status.toUpperCase()}
-          </span>
-        </div>
-      </div>
-      <p className="text-gray-600 mb-4">{ticket.description}</p>
-      {ticket.assignee && (
-        <div className="flex items-center gap-2 mb-4 text-sm text-gray-700 font-medium">
-          <span className="text-gray-500">Assignee:</span>
-          <span className="bg-indigo-50 text-indigo-700 px-3 py-1 rounded-full border border-indigo-100">
-            {ticket.assignee}
-          </span>
-        </div>
-      )}
-      <div className="flex justify-between items-center text-sm text-gray-500">
-        <span>Created: {new Date(ticket.createdAt).toLocaleDateString()}</span>
-        <div className="flex gap-2">
+    <tr className={`border-b border-gray-100 hover:bg-gray-50 transition-colors ${isSelected ? 'bg-gray-50' : ''}`}>
+      <td className="py-4 px-4">
+        <input
+          type="checkbox"
+          checked={isSelected}
+          onChange={() => onSelect(ticket.id)}
+          className="w-4 h-4 rounded border-gray-300 text-[#433878] focus:ring-[#433878] cursor-pointer"
+        />
+      </td>
+      <td className="py-4 px-4 text-sm text-gray-500 font-medium">#{ticket.id}</td>
+      <td className="py-4 px-4 text-sm text-gray-500">{formatDate(ticket.createdAt)}</td>
+      <td className="py-4 px-4 text-sm font-medium text-gray-900">{ticket.employee}</td>
+      <td className="py-4 px-4 text-sm text-gray-600 max-w-[200px] truncate">{ticket.title}</td>
+      <td className="py-4 px-4 text-sm text-gray-500">{ticket.location || '-'}</td>
+      <td className="py-4 px-4 text-sm text-gray-500 whitespace-nowrap">
+        {ticket.endDate ? formatDateTime(ticket.endDate) : '-'}
+      </td>
+      <td className="py-4 px-4 text-sm font-bold text-[#10B981]">
+        ${ticket.amount?.toLocaleString() || '0'}
+      </td>
+      <td className="py-4 px-4">
+        <div className="flex gap-3 justify-end">
           <Link
             to={`/edit/${ticket.id}`}
-            className="text-blue-600 hover:text-blue-800 font-medium"
+            className="text-gray-400 hover:text-[#433878] transition-colors"
           >
-            Edit
+            <Pencil size={18} />
           </Link>
           <button
             onClick={() => onDelete(ticket.id)}
-            className="text-red-600 hover:text-red-800 font-medium cursor-pointer"
+            className="text-gray-400 hover:text-red-600 transition-colors cursor-pointer"
           >
-            Delete
+            <Trash2 size={18} />
           </button>
         </div>
-      </div>
-    </div>
+      </td>
+    </tr>
   );
 };
