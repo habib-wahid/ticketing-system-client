@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { Pencil, Trash2 } from 'lucide-react';
+import { Pencil, Trash2, Eye } from 'lucide-react';
 import type { Ticket } from '../types/ticket';
 
 interface TicketItemProps {
@@ -31,6 +31,13 @@ export const TicketItem: React.FC<TicketItemProps> = ({ ticket, onDelete, isSele
       </td>
       <td className="py-4 px-4">
         <div className="flex gap-3 justify-end">
+          <Link
+            to={`/tickets/${ticket.ticketId}`}
+            className="text-gray-400 hover:text-[#2D336B] transition-colors"
+            title="View details"
+          >
+            <Eye size={18} />
+          </Link>
           <Link
             to={`/edit/${ticket.ticketId || ticket.id}`}
             className="text-gray-400 hover:text-[#433878] transition-colors"

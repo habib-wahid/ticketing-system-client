@@ -8,6 +8,7 @@ import { CreateTicket } from './pages/CreateTicket';
 import { EditTicket } from './pages/EditTicket';
 import { Login } from './pages/Login';
 import { Register } from './pages/Register';
+import { TicketDetailPage } from './pages/TicketDetail';
 
 const DUMMY_DATA: Ticket[] = [
   {
@@ -95,6 +96,14 @@ function App() {
         element={
           <MainLayout fullScreen>
             <EditTicket tickets={tickets} onUpdate={handleUpdateTicket} />
+          </MainLayout>
+        }
+      />
+      <Route
+        path="/tickets/:ticketId"
+        element={
+          <MainLayout fullScreen>
+            <TicketDetailPage />
           </MainLayout>
         }
       />
