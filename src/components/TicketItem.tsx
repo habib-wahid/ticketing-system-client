@@ -11,52 +11,34 @@ interface TicketItemProps {
 }
 
 export const TicketItem: React.FC<TicketItemProps> = ({ ticket, onDelete, isSelected, onSelect }) => {
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('en-GB'); // DD/MM/YYYY
-  };
-
-  const formatDateTime = (dateString: string) => {
-    return new Date(dateString).toLocaleString('en-GB', {
-      day: '2-digit',
-      month: '2-digit',
-      year: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit',
-      hour12: true
-    });
-  };
-
   return (
     <tr className={`border-b border-gray-100 hover:bg-gray-50 transition-colors ${isSelected ? 'bg-gray-50' : ''}`}>
       <td className="py-4 px-4">
         <input
           type="checkbox"
           checked={isSelected}
-          onChange={() => onSelect(ticket.id)}
+          onChange={() => onSelect(ticket.ticketId)}
           className="w-4 h-4 rounded border-gray-300 text-[#433878] focus:ring-[#433878] cursor-pointer"
         />
       </td>
-      <td className="py-4 px-4 text-sm text-gray-500 font-medium">#{ticket.id}</td>
-      <td className="py-4 px-4 text-sm text-gray-500">{formatDate(ticket.createdAt)}</td>
-      <td className="py-4 px-4 text-sm font-medium text-gray-900">{ticket.employee}</td>
+      <td className="py-4 px-4 text-sm text-gray-500 font-medium">{ticket.ticketId}</td>
       <td className="py-4 px-4 text-sm text-gray-600 max-w-[200px] truncate">{ticket.title}</td>
-      <td className="py-4 px-4 text-sm text-gray-500">{ticket.location || '-'}</td>
-      <td className="py-4 px-4 text-sm text-gray-500 whitespace-nowrap">
-        {ticket.endDate ? formatDateTime(ticket.endDate) : '-'}
-      </td>
-      <td className="py-4 px-4 text-sm font-bold text-[#10B981]">
-        ${ticket.amount?.toLocaleString() || '0'}
+      <td className="py-4 px-4 text-sm font-medium text-gray-900">{ticket.category || '-'}</td>
+      <td className="py-4 px-4 text-sm text-gray-500">{ticket.priority || '-'}</td>
+      <td className="py-4 px-4 text-sm text-gray-500">{ticket.status || '-'}</td>
+      <td className="py-4 px-4 text-sm text-gray-500">
+        {ticket.assignedToUser || 'Unassigned'}
       </td>
       <td className="py-4 px-4">
         <div className="flex gap-3 justify-end">
           <Link
-            to={`/edit/${ticket.id}`}
+            to={`/edit/${ticket.ticketId || ticket.id}`}
             className="text-gray-400 hover:text-[#433878] transition-colors"
           >
             <Pencil size={18} />
           </Link>
           <button
-            onClick={() => onDelete(ticket.id)}
+            onClick={() => onDelete(ticket.ticketId || ticket.id || '')}
             className="text-gray-400 hover:text-red-600 transition-colors cursor-pointer"
           >
             <Trash2 size={18} />

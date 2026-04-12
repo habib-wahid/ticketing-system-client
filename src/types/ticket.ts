@@ -1,18 +1,59 @@
+export type TicketFilterStatus = 'PENDING' | 'RESOLVED';
+
+export interface PagedResponse<T> {
+  content: T[];
+  totalElements: number;
+  totalPages: number;
+  number: number; // current page (0-indexed)
+  size: number;
+  last: boolean;
+  first: boolean;
+}
+
+export interface TicketCreatedBy {
+  userId: string;
+  firstName: string;
+  lastName: string;
+  email: string;
+}
+
+export interface TicketSlaSummary {
+  slaId: string;
+  name: string;
+}
 
 export interface Ticket {
-  id: string;
+  // New API fields
+  ticketId: string;
   title: string;
   description: string;
-  priority: 'low' | 'medium' | 'high';
-  status: 'open' | 'in-progress' | 'closed';
-  type?: 'incident' | 'problem' | 'question' | 'suggestion';
-  product: string;
-  employee: string;
-  company: string;
-  startDate: string;
-  endDate: string;
-  assignee?: string;
+  category: string;
+  priority: string;
+  status: string;
+  createdBy?: TicketCreatedBy;
+  assignedToUser?: string | null;
+  assignedAt?: string | null;
+  resolvedAt?: string | null;
+  closedAt?: string | null;
+  sla?: TicketSlaSummary | null;
+  responseDeadline?: string | null;
+  escalationDueAt?: string | null;
+  nextReminderAt?: string | null;
+  slaBreachedAt?: string | null;
+  escalationLevel?: number;
+  tags?: string[];
+  customFields?: Record<string, any>;
   createdAt: string;
-  location?: string;
+  updatedAt?: string | null;
+
+  // Legacy fields for backward compatibility
+  id?: string;
+  employee?: string;
   amount?: number;
+  startDate?: string;
+  endDate?: string;
+  product?: string;
+  assignee?: string;
+  location?: string;
+  type?: string;
 }

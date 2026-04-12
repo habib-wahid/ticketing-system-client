@@ -11,50 +11,31 @@ import { Register } from './pages/Register';
 
 const DUMMY_DATA: Ticket[] = [
   {
-    id: '0012451',
+    ticketId: '0012451',
     title: 'The Story of Danau Toba (Musical Drama)',
     description: 'The Story of Danau Toba (Musical Drama)',
-    priority: 'high',
-    status: 'open',
-    product: 'E-Invoice',
-    employee: 'Cive Slauw',
-    company: 'Burger King',
-    startDate: '2017-11-21',
-    endDate: '2020-08-04',
-    assignee: 'Sami Mansour',
+    category: 'GENERAL',
+    priority: 'HIGH',
+    status: 'OPEN',
     createdAt: '2017-11-21T00:00:00Z',
-    location: 'London, United Kingdom',
-    amount: 1300,
   },
   {
-    id: '0012452',
+    ticketId: '0012452',
     title: 'The Powerfull Concert Festival London 2020',
     description: 'The Powerfull Concert Festival London 2020',
-    priority: 'medium',
-    status: 'in-progress',
-    product: 'API Gateway',
-    employee: 'Bella Simatupang',
-    company: 'Tech Solutions',
-    startDate: '2017-11-21',
-    endDate: '2020-08-04',
+    category: 'TECHNICAL',
+    priority: 'MEDIUM',
+    status: 'IN_PROGRESS',
     createdAt: '2017-11-21T00:00:00Z',
-    location: 'Sydney, Australia',
-    amount: 623.55,
   },
   {
-    id: '0012453',
+    ticketId: '0012453',
     title: 'The Story of Danau Toba (Musical Drama)',
     description: 'The Story of Danau Toba (Musical Drama)',
-    priority: 'low',
-    status: 'closed',
-    product: 'E-Invoice',
-    employee: 'Andrew Stevano',
-    company: 'Burger King',
-    startDate: '2017-11-21',
-    endDate: '2020-08-04',
+    category: 'GENERAL',
+    priority: 'LOW',
+    status: 'CLOSED',
     createdAt: '2017-11-21T00:00:00Z',
-    location: 'Sydney, Australia',
-    amount: 1300,
   },
 ];
 
@@ -77,9 +58,6 @@ function App() {
     setTickets(updatedTickets);
   };
 
-  const handleDeleteTicket = (id: string) => {
-    setTickets(tickets.filter((t) => t.id !== id));
-  };
 
   return (
     <Routes>
@@ -92,7 +70,7 @@ function App() {
         path="/"
         element={
           <MainLayout>
-            <Home tickets={tickets} onDelete={handleDeleteTicket} />
+            <Home />
           </MainLayout>
         }
       />
