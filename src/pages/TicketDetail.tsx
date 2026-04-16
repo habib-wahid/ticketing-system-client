@@ -256,7 +256,7 @@ export function TicketDetailPage() {
                       <div>
                         <span className="font-medium text-gray-700">{h.fromStatus} → {h.toStatus}</span>
                         <span className="text-gray-400 mx-2">·</span>
-                        <span className="text-gray-500">{h.changedBy}</span>
+                        <span className="text-gray-500">{h.name}</span>
                         <span className="text-gray-400 mx-2">·</span>
                         <span className="text-gray-400">{formatDate(h.changedAt)}</span>
                         {h.reason && <p className="text-xs text-gray-400 mt-0.5">{h.reason}</p>}
