@@ -1,73 +1,57 @@
-# React + TypeScript + Vite
+# Modern Ticketing System - Client
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+A premium, high-performance ticket management dashboard built with React, TypeScript, and Tailwind CSS. This application provides a seamless interface for users to create, track, and manage support tickets with real-time SLA monitoring.
 
-Currently, two official plugins are available:
+## ✨ Features
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+- **Dynamic Dashboard**: View and filter tickets by status (Pending, Resolved).
+- **Comprehensive Ticket Details**: Deep-dive into ticket descriptions, category, priority, and metadata.
+- **SLA Tracking**: Visual indicators for response deadlines and SLA breach status.
+- **Interaction System**: Add and view internal/external comments on tickets.
+- **Audit Trail**: Complete status history tracking with reason and actor details.
+- **Modern UI/UX**: Premium design using Tailwind CSS with glassmorphism effects and smooth transitions.
+- **Type-Safe Development**: Full TypeScript integration for robust development and maintenance.
 
-## React Compiler
+## 🚀 Tech Stack
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+- **Framework**: [React 18](https://reactjs.org/)
+- **Build Tool**: [Vite](https://vitejs.dev/)
+- **Styling**: [Tailwind CSS](https://tailwindcss.com/)
+- **Icons**: [Lucide React](https://lucide.dev/)
+- **State Management**: React Hooks (useState, useEffect, useCallback)
+- **Routing**: [React Router v6](https://reactrouter.com/)
 
-## Expanding the ESLint configuration
+## 🛠️ Getting Started
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+### Prerequisites
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+- Node.js (v18 or higher)
+- npm or yarn
 
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
+### Installation
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-```
+1. Clone the repository
+2. Install dependencies:
+   ```bash
+   npm install
+   ```
+3. Create a `.env` file (optional, defaults to `http://localhost:8080`)
+4. Start the development server:
+   ```bash
+   npm run dev
+   ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+## 📂 Project Structure
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+- `src/components`: Reusable UI components (TicketList, TicketItem, etc.)
+- `src/pages`: Main application pages (Home, TicketDetail, CreateTicket, etc.)
+- `src/types`: TypeScript interfaces and type definitions
+- `src/assets`: Static assets and global styles
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-```
+## 🔧 backend Integration
+
+The client is designed to work with the `ticketing-app` Spring Boot backend. Ensure the backend is running at `http://localhost:8080` or update the `BASE_URL` in the source files.
+
+---
+
+Built with ❤️ for efficient support workflows.

@@ -83,6 +83,7 @@ export interface TicketStatusHistoryDetail {
   fromStatus: string;
   toStatus: string;
   changedBy: string;
+  name: String;
   changedAt: string;
   reason?: string;
 }
