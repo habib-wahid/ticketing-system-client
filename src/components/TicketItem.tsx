@@ -27,7 +27,7 @@ export const TicketItem: React.FC<TicketItemProps> = ({ ticket, onDelete, isSele
       <td className="py-4 px-4 text-sm text-gray-500">{ticket.priority || '-'}</td>
       <td className="py-4 px-4 text-sm text-gray-500">{ticket.status || '-'}</td>
       <td className="py-4 px-4 text-sm text-gray-500">
-        {ticket.assignedToUser || 'Unassigned'}
+        {ticket.assignedTo?.name || 'Unassigned'}
       </td>
       <td className="py-4 px-4">
         <div className="flex gap-3 justify-end">
@@ -39,13 +39,13 @@ export const TicketItem: React.FC<TicketItemProps> = ({ ticket, onDelete, isSele
             <Eye size={18} />
           </Link>
           <Link
-            to={`/edit/${ticket.ticketId || ticket.id}`}
+            to={`/edit/${ticket.ticketId}`}
             className="text-gray-400 hover:text-[#433878] transition-colors"
           >
             <Pencil size={18} />
           </Link>
           <button
-            onClick={() => onDelete(ticket.ticketId || ticket.id || '')}
+            onClick={() => onDelete(ticket.ticketId)}
             className="text-gray-400 hover:text-red-600 transition-colors cursor-pointer"
           >
             <Trash2 size={18} />

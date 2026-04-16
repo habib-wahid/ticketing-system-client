@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import type { Ticket, TicketFilterStatus, PagedResponse } from '../types/ticket';
 import { TicketList } from '../components/TicketList';
 
-const USER_ID = 'usr_9f62e110';
+const USER_ID = 'usr_3741f137';
 const BASE_URL = 'http://localhost:8080';
 
 interface TabConfig {

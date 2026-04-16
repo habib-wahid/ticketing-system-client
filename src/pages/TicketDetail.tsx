@@ -181,7 +181,7 @@ export function TicketDetailPage() {
               <div className="flex items-center gap-3 mb-5">
                 <span className="text-xs text-gray-400">From</span>
                 <span className="text-sm text-gray-700 font-medium bg-gray-50 px-3 py-1.5 rounded-lg">
-                  {ticket.createdBy?.userId ?? 'Unknown'}
+                  {ticket.createdBy?.name ?? 'Unknown'}
                 </span>
               </div>
               <h2 className="text-3xl font-extrabold text-gray-900 tracking-tight leading-snug mb-4">
@@ -232,7 +232,7 @@ export function TicketDetailPage() {
                       className={`rounded-xl p-4 ${c.internal ? 'bg-yellow-50 border border-yellow-100' : 'bg-gray-50'}`}
                     >
                       <div className="flex justify-between items-center mb-2">
-                        <span className="text-xs font-bold text-gray-600">{c.author?.userId ?? 'Unknown'}</span>
+                        <span className="text-xs font-bold text-gray-600">{c.author?.fullName ?? 'Unknown'}</span>
                         <span className="text-xs text-gray-400">{formatDate(c.createdAt)}</span>
                       </div>
                       <p className="text-sm text-gray-700 whitespace-pre-wrap">{c.text}</p>
@@ -311,9 +311,9 @@ export function TicketDetailPage() {
               <div className="w-8 h-8 rounded-xl bg-sky-50 border border-sky-100 flex items-center justify-center shrink-0">
                 <User size={15} className="text-sky-500" />
               </div>
-              {ticket.assignedToUserId ? (
+              {ticket.assignedTo ? (
                 <div>
-                  <p className="text-sm font-semibold text-gray-800">{ticket.assignedToUserId}</p>
+                  <p className="text-sm font-semibold text-gray-800">{ticket.assignedTo.name}</p>
                   {ticket.assignedAt && (
                     <p className="text-xs text-gray-400 mt-0.5">Since {formatDate(ticket.assignedAt)}</p>
                   )}
@@ -355,7 +355,7 @@ export function TicketDetailPage() {
                   <div className="w-8 h-8 rounded-xl bg-red-50 border border-red-100 flex items-center justify-center shrink-0">
                     <Clock size={14} className="text-red-400" />
                   </div>
-                  <span className="text-sm font-semibold text-gray-800">{ticket.sla.name}</span>
+                  <span className="text-sm font-semibold text-gray-800">SLA Policy</span>
                 </div>
 
                 {ticket.responseDeadline && (

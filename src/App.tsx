@@ -43,18 +43,18 @@ const DUMMY_DATA: Ticket[] = [
 function App() {
   const [tickets, setTickets] = useState<Ticket[]>(DUMMY_DATA);
 
-  const handleAddTicket = (ticketData: Omit<Ticket, 'id' | 'createdAt'>) => {
+  const handleAddTicket = (ticketData: Omit<Ticket, 'ticketId' | 'createdAt'>) => {
     const newTicket: Ticket = {
       ...ticketData,
-      id: Math.random().toString(36).substr(2, 9),
+      ticketId: Math.random().toString(36).substr(2, 9),
       createdAt: new Date().toISOString(),
     };
     setTickets([...tickets, newTicket]);
   };
 
-  const handleUpdateTicket = (id: string, ticketData: Omit<Ticket, 'id' | 'createdAt'>) => {
+  const handleUpdateTicket = (ticketId: string, ticketData: Omit<Ticket, 'ticketId' | 'createdAt'>) => {
     const updatedTickets = tickets.map((t) =>
-      t.id === id ? { ...t, ...ticketData } : t
+      t.ticketId === ticketId ? { ...t, ...ticketData } : t
     );
     setTickets(updatedTickets);
   };

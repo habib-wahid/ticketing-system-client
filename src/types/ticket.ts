@@ -12,26 +12,31 @@ export interface PagedResponse<T> {
 
 export interface TicketCreatedBy {
   userId: string;
-  firstName: string;
-  lastName: string;
-  email: string;
+  name: string;
+  role: string;
+}
+
+export interface TicketAssignedTo {
+  userId: string;
+  name: string;
+  role: string;
 }
 
 export interface TicketSlaSummary {
-  slaId: string;
-  name: string;
+  deadline: string;
+  remainingMinutes: number;
+  breached: boolean;
 }
 
 export interface Ticket {
-  // New API fields
   ticketId: string;
   title: string;
   description: string;
   category: string;
   priority: string;
   status: string;
-  createdBy?: TicketCreatedBy;
-  assignedToUser?: string | null;
+  createdBy?: TicketCreatedBy | null;
+  assignedTo?: TicketAssignedTo | null;
   assignedAt?: string | null;
   resolvedAt?: string | null;
   closedAt?: string | null;
@@ -42,28 +47,17 @@ export interface Ticket {
   slaBreachedAt?: string | null;
   escalationLevel?: number;
   tags?: string[];
-  customFields?: Record<string, any>;
+  customFields?: Record<string, unknown>;
   createdAt: string;
   updatedAt?: string | null;
-
-  // Legacy fields for backward compatibility
-  id?: string;
-  employee?: string;
-  amount?: number;
-  startDate?: string;
-  endDate?: string;
-  product?: string;
-  assignee?: string;
-  location?: string;
-  type?: string;
 }
 
 // ---- Full detail response (GET /api/tickets/{ticketId}) ----
 
 export interface TicketAuthorDetail {
   userId: string;
-  username?: string;
-  email?: string;
+  fullName: string;
+  role: string;
 }
 
 export interface TicketCommentDetail {
@@ -95,8 +89,8 @@ export interface TicketStatusHistoryDetail {
 
 export interface TicketSlaEventDetail {
   eventType: string;
-  occurredAt: string;
-  description?: string;
+  triggeredAt: string;
+  notifiedRoles: string[];
 }
 
 export interface TicketDetail {
@@ -106,8 +100,8 @@ export interface TicketDetail {
   category: string;
   priority: string;
   status: string;
-  createdBy?: { userId: string; role?: string };
-  assignedToUserId?: string | null;
+  createdBy?: TicketCreatedBy | null;
+  assignedTo?: TicketAssignedTo | null;
   assignedAt?: string | null;
   resolvedAt?: string | null;
   closedAt?: string | null;
