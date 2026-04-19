@@ -41,16 +41,9 @@ const DUMMY_DATA: Ticket[] = [
 ];
 
 function App() {
-  const [tickets, setTickets] = useState<Ticket[]>(DUMMY_DATA);
+  const [tickets, setTickets] = useState<Ticket[]>([]);
 
-  const handleAddTicket = (ticketData: Omit<Ticket, 'ticketId' | 'createdAt'>) => {
-    const newTicket: Ticket = {
-      ...ticketData,
-      ticketId: Math.random().toString(36).substr(2, 9),
-      createdAt: new Date().toISOString(),
-    };
-    setTickets([...tickets, newTicket]);
-  };
+  // handleAddTicket removed as it's now handled by CreateTicket API call
 
   const handleUpdateTicket = (ticketId: string, ticketData: Omit<Ticket, 'ticketId' | 'createdAt'>) => {
     const updatedTickets = tickets.map((t) =>
@@ -87,7 +80,7 @@ function App() {
         path="/new"
         element={
           <MainLayout fullScreen>
-            <CreateTicket onAdd={handleAddTicket} />
+            <CreateTicket />
           </MainLayout>
         }
       />

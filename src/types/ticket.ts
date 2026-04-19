@@ -47,6 +47,7 @@ export interface Ticket {
   slaBreachedAt?: string | null;
   escalationLevel?: number;
   tags?: string[];
+  attachments?: TicketAttachmentDetail[];
   customFields?: Record<string, unknown>;
   createdAt: string;
   updatedAt?: string | null;
