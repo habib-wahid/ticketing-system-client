@@ -1,16 +1,16 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useParams, Link } from 'react-router-dom';
 import {
-  ArrowLeft, X, Pencil, ChevronDown, Paperclip, Plus, Clock, ExternalLink, Search
+  ArrowLeft, X, Pencil, ChevronDown, Paperclip, Plus, Clock, ExternalLink, Search, MessageSquare, Send
 } from 'lucide-react';
-import type { Ticket } from '../types/ticket';
+import type { TicketDetail, TicketCommentDetail } from '../types/ticket';
 
 const BASE_URL = 'http://localhost:8080';
 
 export function EditTicket() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const [ticket, setTicket] = useState<Ticket | null>(null);
+  const [ticket, setTicket] = useState<TicketDetail | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -26,6 +26,10 @@ export function EditTicket() {
 
   // Tag editing states
   const [newTag, setNewTag] = useState('');
+
+  // Comment states
+  const [newComment, setNewComment] = useState('');
+  const [isPostingComment, setIsPostingComment] = useState(false);
 
   useEffect(() => {
     const fetchTicket = async () => {
@@ -107,6 +111,31 @@ export function EditTicket() {
     if (!ticket) return;
     const updatedTags = (ticket.tags || []).filter(t => t !== tagToRemove);
     updateField('tags', updatedTags);
+  };
+
+  const addComment = async () => {
+    if (!newComment.trim() || !ticket) return;
+    setIsPostingComment(true);
+    try {
+      const response = await fetch(`${BASE_URL}/api/tickets/${id}/comments`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          content: newComment,
+          authorUserId: ticket.createdBy?.userId || 'SYSTEM' // Fallout to SYSTEM if unknown, but usually we have it
+        }),
+      });
+
+      if (!response.ok) throw new Error('Failed to post comment');
+      const updatedTicketResponse = await fetch(`${BASE_URL}/api/tickets/${id}`);
+      const updatedData = await updatedTicketResponse.json();
+      setTicket(updatedData.data);
+      setNewComment('');
+    } catch (err: any) {
+      alert(err.message);
+    } finally {
+      setIsPostingComment(false);
+    }
   };
 
   if (error) return <div className="p-12 text-center text-red-500 font-bold">{error}</div>;
@@ -241,6 +270,67 @@ export function EditTicket() {
                 <Plus size={18} />
                 <span className="text-sm font-bold">Add Attachment</span>
               </div>
+            </div>
+          </section>
+
+          {/* Comments Section */}
+          <section className="pt-12 border-t border-gray-50 space-y-8">
+            <div className="flex items-center gap-3">
+              <div className="p-2 bg-gray-50 rounded-lg text-gray-400">
+                <MessageSquare size={18} />
+              </div>
+              <h3 className="text-sm font-bold text-gray-400 tracking-widest uppercase">Comments ({ticket.comments?.length || 0})</h3>
+            </div>
+
+            {/* Comment Input */}
+            <div className="flex gap-4 items-start">
+              <div className="flex-shrink-0 w-10 h-10 rounded-full bg-gray-50 flex items-center justify-center font-bold text-gray-300 text-xs border border-gray-100 uppercase">
+                {ticket.createdBy?.name?.charAt(0) || 'U'}
+              </div>
+              <div className="flex-1 space-y-3">
+                <textarea
+                  className="w-full bg-transparent border-b border-gray-100 text-sm font-medium text-gray-700 placeholder-gray-400 py-2 focus:ring-0 focus:border-[#10B981] transition-all resize-none min-h-[40px]"
+                  placeholder="Add a comment..."
+                  value={newComment}
+                  onChange={(e) => setNewComment(e.target.value)}
+                />
+                {newComment.trim() && (
+                  <div className="flex justify-end animate-in fade-in slide-in-from-top-1">
+                    <button
+                      onClick={addComment}
+                      disabled={isPostingComment}
+                      className="bg-[#10B981] text-white px-3 py-1.5 rounded-lg text-xs font-bold shadow-sm hover:bg-[#059669] disabled:opacity-50 transition-all"
+                    >
+                      {isPostingComment ? 'Posting...' : 'Post Comment'}
+                    </button>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Comments List */}
+            <div className="space-y-6">
+              {ticket.comments?.slice().reverse().map((comment: TicketCommentDetail) => (
+                <div key={comment.commentId} className="group relative flex gap-4">
+                  <div className="flex-shrink-0 w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center font-bold text-gray-500 text-xs border border-gray-100 uppercase">
+                    {comment.author.fullName.charAt(0)}
+                  </div>
+                  <div className="flex-1 space-y-2">
+                    <div className="flex items-baseline gap-2">
+                      <span className="text-sm font-bold text-gray-900">{comment.author.fullName}</span>
+                      <span className="text-[10px] font-bold text-gray-300 uppercase tracking-wider">
+                        {new Date(comment.createdAt).toLocaleDateString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                      </span>
+                    </div>
+                    <div className="text-sm text-gray-600 leading-relaxed font-medium whitespace-pre-wrap">
+                      {comment.text}
+                    </div>
+                  </div>
+                </div>
+              ))}
+              {(!ticket.comments || ticket.comments.length === 0) && (
+                <p className="text-center py-12 text-gray-300 font-bold text-sm italic">No comments yet. Start the conversation!</p>
+              )}
             </div>
           </section>
         </div>

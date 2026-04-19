@@ -11,8 +11,7 @@ import { Register } from './pages/Register';
 import { TicketDetailPage } from './pages/TicketDetail';
 
 function App() {
-
-  const [tickets, setTickets] = useState<Ticket[]>([]);
+  const [tickets] = useState<Ticket[]>([]);
 
 
   return (
