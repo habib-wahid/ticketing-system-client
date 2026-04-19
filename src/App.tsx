@@ -10,36 +10,6 @@ import { Login } from './pages/Login';
 import { Register } from './pages/Register';
 import { TicketDetailPage } from './pages/TicketDetail';
 
-const DUMMY_DATA: Ticket[] = [
-  {
-    ticketId: '0012451',
-    title: 'The Story of Danau Toba (Musical Drama)',
-    description: 'The Story of Danau Toba (Musical Drama)',
-    category: 'GENERAL',
-    priority: 'HIGH',
-    status: 'OPEN',
-    createdAt: '2017-11-21T00:00:00Z',
-  },
-  {
-    ticketId: '0012452',
-    title: 'The Powerfull Concert Festival London 2020',
-    description: 'The Powerfull Concert Festival London 2020',
-    category: 'TECHNICAL',
-    priority: 'MEDIUM',
-    status: 'IN_PROGRESS',
-    createdAt: '2017-11-21T00:00:00Z',
-  },
-  {
-    ticketId: '0012453',
-    title: 'The Story of Danau Toba (Musical Drama)',
-    description: 'The Story of Danau Toba (Musical Drama)',
-    category: 'GENERAL',
-    priority: 'LOW',
-    status: 'CLOSED',
-    createdAt: '2017-11-21T00:00:00Z',
-  },
-];
-
 function App() {
   const [tickets, setTickets] = useState<Ticket[]>([]);
 
