@@ -11,11 +11,8 @@ import { Register } from './pages/Register';
 import { TicketDetailPage } from './pages/TicketDetail';
 
 function App() {
+
   const [tickets, setTickets] = useState<Ticket[]>([]);
-
-  // handleAddTicket removed as it's now handled by CreateTicket API call
-
-  // handleUpdateTicket removed as it's now handled by EditTicket API call
 
 
   return (
