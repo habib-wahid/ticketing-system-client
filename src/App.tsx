@@ -15,12 +15,7 @@ function App() {
 
   // handleAddTicket removed as it's now handled by CreateTicket API call
 
-  const handleUpdateTicket = (ticketId: string, ticketData: Omit<Ticket, 'ticketId' | 'createdAt'>) => {
-    const updatedTickets = tickets.map((t) =>
-      t.ticketId === ticketId ? { ...t, ...ticketData } : t
-    );
-    setTickets(updatedTickets);
-  };
+  // handleUpdateTicket removed as it's now handled by EditTicket API call
 
 
   return (
@@ -58,7 +53,7 @@ function App() {
         path="/edit/:id"
         element={
           <MainLayout fullScreen>
-            <EditTicket tickets={tickets} onUpdate={handleUpdateTicket} />
+            <EditTicket />
           </MainLayout>
         }
       />
