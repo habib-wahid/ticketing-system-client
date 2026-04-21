@@ -1,6 +1,4 @@
-import { useState } from 'react';
 import { Routes, Route } from 'react-router-dom';
-import type { Ticket } from './types/ticket';
 import { MainLayout } from './components/MainLayout';
 import { Home } from './pages/Home';
 import { AssignedTickets } from './pages/AssignedTickets';
@@ -11,7 +9,6 @@ import { Register } from './pages/Register';
 import { TicketDetailPage } from './pages/TicketDetail';
 
 function App() {
-  const [tickets] = useState<Ticket[]>([]);
 
 
   return (
@@ -33,7 +30,7 @@ function App() {
         path="/assigned"
         element={
           <MainLayout>
-            <AssignedTickets tickets={tickets} />
+            <AssignedTickets />
           </MainLayout>
         }
       />

@@ -1,100 +1,121 @@
-import { render, screen, fireEvent } from '@testing-library/react';
-import { describe, it, expect } from 'vitest';
+import { render, screen, waitFor, fireEvent } from '@testing-library/react';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { MemoryRouter } from 'react-router-dom';
 import { AssignedTickets } from '../AssignedTickets';
-import { Ticket } from '../../types/ticket';
 
-const mockTickets: Ticket[] = [
+const makePaged = (tickets: object[]) => ({
+  data: {
+    content: tickets,
+    totalElements: tickets.length,
+    totalPages: 1,
+    number: 0,
+    size: 10,
+    last: true,
+    first: true,
+  },
+});
+
+const mockTickets = [
   {
-    id: '1',
-    title: 'Test Ticket 1',
-    description: 'Description 1',
-    priority: 'high',
-    status: 'open',
-    product: 'Product A',
-    employee: 'Employee A',
-    company: 'Company A',
-    startDate: '2023-10-01',
-    endDate: '2023-10-10',
-    assignee: 'Assignee A',
+    ticketId: 'T-001',
+    title: 'Fix login bug',
+    description: 'Login fails on mobile',
+    category: 'Bug',
+    priority: 'HIGH',
+    status: 'PENDING',
     createdAt: new Date().toISOString(),
   },
   {
-    id: '2',
-    title: 'Test Ticket 2',
-    description: 'Description 2',
-    priority: 'medium',
-    status: 'in-progress',
-    product: 'Product B',
-    employee: 'Employee B',
-    company: 'Company B',
-    startDate: '2023-10-05',
-    endDate: '2023-10-15',
-    assignee: 'Assignee B',
+    ticketId: 'T-002',
+    title: 'Add dark mode',
+    description: 'Dark mode support',
+    category: 'Feature',
+    priority: 'LOW',
+    status: 'RESOLVED',
     createdAt: new Date().toISOString(),
-  }
+  },
 ];
 
+const pendingTickets = mockTickets.filter((t) => t.status === 'PENDING');
+const resolvedTickets = mockTickets.filter((t) => t.status === 'RESOLVED');
+
+beforeEach(() => {
+  vi.restoreAllMocks();
+});
+
+function renderComponent() {
+  return render(
+    <MemoryRouter>
+      <AssignedTickets />
+    </MemoryRouter>
+  );
+}
+
 describe('AssignedTickets Page', () => {
-  it('renders the page title and breadcrumbs', () => {
-    render(
-      <MemoryRouter>
-        <AssignedTickets tickets={mockTickets} />
-      </MemoryRouter>
-    );
-    expect(screen.getAllByText('Assigned Tickets').length).toBeGreaterThan(0);
-    expect(screen.getByText('My Pages /')).toBeInTheDocument();
+  it('shows loading spinner on mount', () => {
+    vi.spyOn(globalThis, 'fetch').mockReturnValue(new Promise(() => {}));
+    renderComponent();
+    expect(screen.getByText('Loading tickets...')).toBeInTheDocument();
   });
 
-  it('renders status sections', () => {
-    render(
-      <MemoryRouter>
-        <AssignedTickets tickets={mockTickets} />
-      </MemoryRouter>
-    );
-    expect(screen.getByText('To-do')).toBeInTheDocument();
-    expect(screen.getByText('On Progress')).toBeInTheDocument();
-    expect(screen.getByText('In Review')).toBeInTheDocument();
+  it('renders Pending tickets after fetch', async () => {
+    vi.spyOn(globalThis, 'fetch').mockResolvedValue({
+      ok: true,
+      json: async () => makePaged(pendingTickets),
+    } as Response);
+
+    renderComponent();
+
+    await waitFor(() => expect(screen.getByText('Fix login bug')).toBeInTheDocument());
+    expect(screen.queryByText('Add dark mode')).not.toBeInTheDocument();
   });
 
-  it('renders tickets in their respective sections', () => {
-    render(
-      <MemoryRouter>
-        <AssignedTickets tickets={mockTickets} />
-      </MemoryRouter>
-    );
-    expect(screen.getByText('Test Ticket 1')).toBeInTheDocument();
-    expect(screen.getByText('Test Ticket 2')).toBeInTheDocument();
+  it('renders Resolved tickets when tab is clicked', async () => {
+    vi.spyOn(globalThis, 'fetch')
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => makePaged(pendingTickets),
+      } as Response)
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => makePaged(resolvedTickets),
+      } as Response);
+
+    renderComponent();
+
+    await waitFor(() => screen.getByText('Fix login bug'));
+
+    await userEvent.click(screen.getByRole('button', { name: 'Resolved' }));
+
+    await waitFor(() => expect(screen.getByText('Add dark mode')).toBeInTheDocument());
+    expect(screen.queryByText('Fix login bug')).not.toBeInTheDocument();
   });
 
-  it('toggles sections on click', () => {
-    render(
-      <MemoryRouter>
-        <AssignedTickets tickets={mockTickets} />
-      </MemoryRouter>
+  it('shows error message when fetch fails', async () => {
+    vi.spyOn(globalThis, 'fetch').mockResolvedValue({
+      ok: false,
+      status: 500,
+    } as Response);
+
+    renderComponent();
+
+    await waitFor(() =>
+      expect(screen.getByText(/Failed to fetch assigned tickets/i)).toBeInTheDocument()
     );
-    
-    const todoButton = screen.getByText('To-do').parentElement!;
-    fireEvent.click(todoButton);
-    
-    expect(screen.queryByText('Test Ticket 1')).not.toBeInTheDocument();
-    
-    fireEvent.click(todoButton);
-    expect(screen.getByText('Test Ticket 1')).toBeInTheDocument();
   });
 
-  it('displays correct ticket count in status badges', () => {
-    render(
-      <MemoryRouter>
-        <AssignedTickets tickets={mockTickets} />
-      </MemoryRouter>
-    );
-    
-    // "To-do" has 1 ticket, "On Progress" has 1 ticket, "In Review" has 0
-    const badges = screen.getAllByText(/[0-9]/, { selector: 'span' });
-    // This is a bit brittle, but let's check the ones next to status labels
-    expect(screen.getByText('To-do').nextSibling?.textContent).toBe('1');
-    expect(screen.getByText('On Progress').nextSibling?.textContent).toBe('1');
-    expect(screen.getByText('In Review').nextSibling?.textContent).toBe('0');
+  it('highlights the active tab', async () => {
+    vi.spyOn(globalThis, 'fetch').mockResolvedValue({
+      ok: true,
+      json: async () => makePaged([]),
+    } as Response);
+
+    renderComponent();
+
+    const pendingBtn = screen.getByRole('button', { name: 'Pending' });
+    expect(pendingBtn.className).toContain('bg-[#2D336B]');
+
+    const resolvedBtn = screen.getByRole('button', { name: 'Resolved' });
+    expect(resolvedBtn.className).not.toContain('bg-[#2D336B]');
   });
 });
