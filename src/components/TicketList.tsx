@@ -16,6 +16,7 @@ interface TicketListProps {
   onDelete: (id: string) => void;
   pageInfo: Omit<PagedResponse<Ticket>, 'content'>;
   onPageChange: (page: number) => void;
+  hideManageActions?: boolean;
 }
 
 export const TicketList: React.FC<TicketListProps> = ({
@@ -23,6 +24,7 @@ export const TicketList: React.FC<TicketListProps> = ({
   onDelete,
   pageInfo,
   onPageChange,
+  hideManageActions = false,
 }) => {
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
 
@@ -57,12 +59,14 @@ export const TicketList: React.FC<TicketListProps> = ({
       <div className="text-center py-16 bg-white rounded-lg border-2 border-dashed border-gray-200 shadow-sm">
         <TicketIcon size={36} className="mx-auto text-gray-300 mb-3" />
         <p className="text-gray-500 font-medium">No tickets found in this category.</p>
-        <Link
-          to="/new"
-          className="mt-4 inline-flex items-center gap-2 text-sm text-[#10B981] hover:underline font-semibold"
-        >
-          <Plus size={16} /> Create a new ticket
-        </Link>
+        {!hideManageActions && (
+          <Link
+            to="/new"
+            className="mt-4 inline-flex items-center gap-2 text-sm text-[#10B981] hover:underline font-semibold"
+          >
+            <Plus size={16} /> Create a new ticket
+          </Link>
+        )}
       </div>
     );
   }
@@ -71,13 +75,15 @@ export const TicketList: React.FC<TicketListProps> = ({
     <div className="space-y-6">
       {/* Top Action Bar */}
       <div className="flex flex-wrap gap-4 items-center">
-        <Link
-          to="/new"
-          className="bg-[#10B981] hover:bg-[#059669] text-white px-6 py-3 rounded-lg font-bold flex items-center gap-2 transition-colors shadow-sm"
-        >
-          <Plus size={20} />
-          New Ticket
-        </Link>
+        {!hideManageActions && (
+          <Link
+            to="/new"
+            className="bg-[#10B981] hover:bg-[#059669] text-white px-6 py-3 rounded-lg font-bold flex items-center gap-2 transition-colors shadow-sm"
+          >
+            <Plus size={20} />
+            New Ticket
+          </Link>
+        )}
 
         <div className="bg-white border border-gray-100 rounded-lg px-6 py-2 flex items-center gap-4 shadow-sm">
           <div className="p-2 bg-gray-50 rounded-full">
@@ -89,23 +95,27 @@ export const TicketList: React.FC<TicketListProps> = ({
           </div>
         </div>
 
-        <div className="bg-white border border-gray-100 rounded-lg px-6 py-2 flex items-center gap-3 shadow-sm ml-auto">
-          <input
-            type="checkbox"
-            checked={true}
-            readOnly
-            className="w-5 h-5 rounded border-gray-300 text-[#433878] focus:ring-[#433878]"
-          />
-          <span className="text-sm font-medium text-gray-700">Active</span>
-        </div>
+        {!hideManageActions && (
+          <>
+            <div className="bg-white border border-gray-100 rounded-lg px-6 py-2 flex items-center gap-3 shadow-sm ml-auto">
+              <input
+                type="checkbox"
+                checked={true}
+                readOnly
+                className="w-5 h-5 rounded border-gray-300 text-[#433878] focus:ring-[#433878]"
+              />
+              <span className="text-sm font-medium text-gray-700">Active</span>
+            </div>
 
-        <button className="bg-[#F59E0B] hover:bg-[#D97706] text-white px-8 py-3 rounded-lg font-bold transition-colors shadow-sm">
-          Edit
-        </button>
+            <button className="bg-[#F59E0B] hover:bg-[#D97706] text-white px-8 py-3 rounded-lg font-bold transition-colors shadow-sm">
+              Edit
+            </button>
 
-        <button className="bg-[#EF4444] hover:bg-[#DC2626] text-white px-8 py-3 rounded-lg font-bold transition-colors shadow-sm">
-          Delete
-        </button>
+            <button className="bg-[#EF4444] hover:bg-[#DC2626] text-white px-8 py-3 rounded-lg font-bold transition-colors shadow-sm">
+              Delete
+            </button>
+          </>
+        )}
       </div>
 
       {/* Table Container */}

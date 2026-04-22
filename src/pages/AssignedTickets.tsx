@@ -113,6 +113,7 @@ export function AssignedTickets() {
           onDelete={handleDelete}
           pageInfo={pageInfo}
           onPageChange={handlePageChange}
+          hideManageActions={true}
         />
       )}
     </div>
