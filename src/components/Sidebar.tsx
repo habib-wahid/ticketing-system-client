@@ -1,8 +1,10 @@
 import { LayoutDashboard, Ticket, Settings, LogOut } from 'lucide-react';
 import { Link, useLocation } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
 
 export const Sidebar = () => {
   const location = useLocation();
+  const { logout } = useAuth();
 
   const menuItems = [
     { icon: LayoutDashboard, label: 'Dashboard', path: '/dashboard' },
@@ -34,7 +36,10 @@ export const Sidebar = () => {
       </nav>
 
       <div className="mt-auto space-y-6">
-        <button className="w-full bg-[#B23B2B] text-white py-2 rounded-lg font-bold flex items-center justify-center gap-2 hover:bg-[#a03527] transition-colors">
+        <button
+          onClick={logout}
+          className="w-full bg-[#B23B2B] text-white py-2 rounded-lg font-bold flex items-center justify-center gap-2 hover:bg-[#a03527] transition-colors"
+        >
           <LogOut size={18} />
           Logout
         </button>

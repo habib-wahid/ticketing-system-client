@@ -4,8 +4,7 @@ import {
   ArrowLeft, X, Pencil, ChevronDown, Paperclip, Plus, Clock, ExternalLink, Search, MessageSquare, Send
 } from 'lucide-react';
 import type { TicketDetail, TicketCommentDetail } from '../types/ticket';
-
-const BASE_URL = 'http://localhost:8080';
+import { apiClient } from '../services/api';
 
 export function EditTicket() {
   const { id } = useParams<{ id: string }>();
@@ -34,9 +33,7 @@ export function EditTicket() {
   useEffect(() => {
     const fetchTicket = async () => {
       try {
-        const response = await fetch(`${BASE_URL}/api/tickets/${id}`);
-        if (!response.ok) throw new Error('Ticket not found');
-        const data = await response.json();
+        const data = await apiClient<{ data: TicketDetail }>(`/api/tickets/${id}`);
         setTicket(data.data);
       } catch (err: any) {
         setError(err.message);
@@ -50,14 +47,11 @@ export function EditTicket() {
   const updateField = async (fieldName: string, value: any) => {
     setUpdatingField(fieldName);
     try {
-      const response = await fetch(`${BASE_URL}/api/tickets/${id}`, {
+      const updatedData = await apiClient<{ data: TicketDetail }>(`/api/tickets/${id}`, {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ [fieldName]: value }),
       });
 
-      if (!response.ok) throw new Error('Update failed');
-      const updatedData = await response.json();
       setTicket(updatedData.data);
       setEditingField(null);
     } catch (err: any) {
@@ -74,9 +68,7 @@ export function EditTicket() {
     }
     setIsSearchingStaff(true);
     try {
-      const response = await fetch(`${BASE_URL}/api/users/search?name=${encodeURIComponent(query)}`);
-      if (!response.ok) throw new Error('Search failed');
-      const data = await response.json();
+      const data = await apiClient<{ data: any[] }>(`/api/users/search?name=${encodeURIComponent(query)}`);
       setStaffResults(data.data || []);
     } catch (err) {
       console.error(err);
@@ -117,18 +109,15 @@ export function EditTicket() {
     if (!newComment.trim() || !ticket) return;
     setIsPostingComment(true);
     try {
-      const response = await fetch(`${BASE_URL}/api/tickets/${id}/comments`, {
+      await apiClient(`/api/tickets/${id}/comments`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           content: newComment,
-          authorUserId: ticket.createdBy?.userId || 'SYSTEM' // Fallout to SYSTEM if unknown, but usually we have it
+          authorUserId: ticket.createdBy?.userId || 'SYSTEM'
         }),
       });
 
-      if (!response.ok) throw new Error('Failed to post comment');
-      const updatedTicketResponse = await fetch(`${BASE_URL}/api/tickets/${id}`);
-      const updatedData = await updatedTicketResponse.json();
+      const updatedData = await apiClient<{ data: TicketDetail }>(`/api/tickets/${id}`);
       setTicket(updatedData.data);
       setNewComment('');
     } catch (err: any) {

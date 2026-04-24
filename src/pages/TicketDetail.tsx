@@ -16,8 +16,7 @@ import {
   Calendar,
 } from 'lucide-react';
 import type { TicketDetail } from '../types/ticket';
-
-const BASE_URL = 'http://localhost:8080';
+import { apiClient } from '../services/api';
 
 const PRIORITY_STYLES: Record<string, { badge: string; dot: string }> = {
   LOW: { badge: 'bg-emerald-100 text-emerald-700 border border-emerald-200', dot: 'bg-emerald-400' },
@@ -98,13 +97,11 @@ export function TicketDetailPage() {
 
   useEffect(() => {
     if (!ticketId) return;
-    const fetch_ = async () => {
+    const loadTicket = async () => {
       setLoading(true);
       setError(null);
       try {
-        const res = await fetch(`${BASE_URL}/api/tickets/${ticketId}`);
-        if (!res.ok) throw new Error(`Failed to fetch ticket (${res.status})`);
-        const result = await res.json();
+        const result = await apiClient<{ data: TicketDetail }>(`/api/tickets/${ticketId}`);
         setTicket(result.data);
       } catch (err: unknown) {
         setError(err instanceof Error ? err.message : 'Unknown error');
@@ -112,7 +109,7 @@ export function TicketDetailPage() {
         setLoading(false);
       }
     };
-    fetch_();
+    loadTicket();
   }, [ticketId]);
 
   if (loading) {

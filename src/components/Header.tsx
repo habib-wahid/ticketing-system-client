@@ -1,6 +1,14 @@
-import { Search, Menu, Settings, Bell, MessageSquare, Gift, ChevronDown } from 'lucide-react';
+import { Search, Menu, Bell, ChevronDown } from 'lucide-react';
+import { useAuth } from '../context/AuthContext';
 
 export const Header = () => {
+  const { user } = useAuth();
+
+  const displayName = user ? `${user.firstName}` : 'Guest';
+  const initials = user
+    ? `${user.firstName.charAt(0)}${user.lastName.charAt(0)}`.toUpperCase()
+    : 'G';
+
   return (
     <header className="h-16 flex items-center justify-between px-6 bg-white border-b border-gray-100 shadow-sm sticky top-0 z-10">
       {/* Left side: Menu and Title */}
@@ -8,7 +16,7 @@ export const Header = () => {
         <button className="text-gray-500 hover:text-gray-700 lg:hidden">
           <Menu size={24} />
         </button>
-        <h2 className="text-xl font-bold text-gray-800">Customer</h2>
+        <h2 className="text-xl font-bold text-gray-800">{user?.role ?? 'Customer'}</h2>
       </div>
 
       {/* Middle: Search Bar */}
@@ -34,13 +42,11 @@ export const Header = () => {
 
         {/* Profile Section */}
         <div className="ml-1 pl-2 sm:pl-4 border-l border-gray-100 flex items-center gap-2 sm:gap-3 cursor-pointer hover:bg-gray-50 p-1 rounded-xl transition-colors group">
-          <img
-            src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-1.2.1&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80"
-            alt="David"
-            className="w-8 h-8 sm:w-10 sm:h-10 rounded-xl object-cover border-2 border-transparent group-hover:border-[#433878]/10 transition-all"
-          />
+          <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-xl bg-gradient-to-br from-[#2D336B] to-[#433878] flex items-center justify-center border-2 border-transparent group-hover:border-[#433878]/10 transition-all">
+            <span className="text-white font-bold text-xs sm:text-sm">{initials}</span>
+          </div>
           <div className="flex items-center gap-1 sm:gap-2">
-            <span className="text-sm font-bold text-gray-700 hidden sm:block">David</span>
+            <span className="text-sm font-bold text-gray-700 hidden sm:block">{displayName}</span>
             <ChevronDown size={16} className="text-gray-400" />
           </div>
         </div>

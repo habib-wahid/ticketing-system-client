@@ -1,9 +1,8 @@
 import { useState, useEffect, useCallback } from 'react';
 import type { Ticket, TicketFilterStatus, PagedResponse } from '../types/ticket';
 import { TicketList } from '../components/TicketList';
-
-const USER_ID = 'usr_3741f137';
-const BASE_URL = 'http://localhost:8080';
+import { apiClient } from '../services/api';
+import { useAuth } from '../context/AuthContext';
 
 interface TabConfig {
   label: string;
@@ -16,6 +15,7 @@ const TABS: TabConfig[] = [
 ];
 
 export function Home() {
+  const { user } = useAuth();
   const [activeTab, setActiveTab] = useState<TicketFilterStatus>('PENDING');
   const [tickets, setTickets] = useState<Ticket[]>([]);
   const [pageInfo, setPageInfo] = useState<Omit<PagedResponse<Ticket>, 'content'>>({
@@ -30,17 +30,14 @@ export function Home() {
   const [error, setError] = useState<string | null>(null);
 
   const fetchTickets = useCallback(async (status: TicketFilterStatus, page: number) => {
+    if (!user) return;
     setLoading(true);
     setError(null);
     try {
-      const url = `${BASE_URL}/api/tickets/user/${USER_ID}?status=${status}&page=${page}&size=10`;
-      const response = await fetch(url);
-      if (!response.ok) {
-        throw new Error(`Failed to fetch tickets (${response.status})`);
-      }
-      const result = await response.json();
-      // result.data is a Spring Page object
-      const paged: PagedResponse<Ticket> = result.data;
+      const result = await apiClient<{ data: PagedResponse<Ticket> }>(
+        `/api/tickets/user/${user.userId}?status=${status}&page=${page}&size=10`,
+      );
+      const paged = result.data;
       setTickets(paged.content ?? []);
       setPageInfo({
         totalElements: paged.totalElements,
@@ -55,7 +52,7 @@ export function Home() {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [user]);
 
   // Re-fetch whenever tab changes (reset to page 0)
   useEffect(() => {

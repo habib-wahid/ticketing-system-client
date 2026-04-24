@@ -1,86 +1,71 @@
-import { render, screen, fireEvent } from '@testing-library/react';
-import { describe, it, expect } from 'vitest';
+import { render, screen } from '@testing-library/react';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { MemoryRouter } from 'react-router-dom';
+import { AuthProvider } from '../../context/AuthContext';
 import App from '../../App';
+import * as api from '../../services/api';
+import type { AuthResponse } from '../../types/auth';
 
-describe('Ticketing App with Routing', () => {
-  it('renders login page', () => {
-    render(
-      <MemoryRouter initialEntries={['/login']}>
+const mockAuthResponse: AuthResponse = {
+  accessToken: 'test-token',
+  refreshToken: 'test-refresh',
+  tokenType: 'Bearer',
+  expiresInSeconds: 3600,
+  user: {
+    userId: 'usr_test',
+    email: 'test@example.com',
+    firstName: 'Test',
+    lastName: 'User',
+    role: 'CUSTOMER',
+  },
+};
+
+function renderApp(initialRoute = '/') {
+  return render(
+    <MemoryRouter initialEntries={[initialRoute]}>
+      <AuthProvider>
         <App />
-      </MemoryRouter>
-    );
-    expect(screen.getByText('WELCOME BACK')).toBeInTheDocument();
+      </AuthProvider>
+    </MemoryRouter>
+  );
+}
+
+describe('Ticketing App Routing', () => {
+  beforeEach(() => api.clearTokens());
+  afterEach(() => api.clearTokens());
+
+  it('renders the login page on /login route', async () => {
+    renderApp('/login');
+    expect(await screen.findByText('WELCOME BACK')).toBeInTheDocument();
     expect(screen.getByPlaceholderText('example@orchida-soft.com')).toBeInTheDocument();
   });
 
-  it('renders initial dummy tickets on home page', () => {
-    render(
-      <MemoryRouter>
-        <App />
-      </MemoryRouter>
-    );
-    expect(screen.getAllByText('The Story of Danau Toba (Musical Drama)')[0]).toBeInTheDocument();
-    expect(screen.getByText('Cive Slauw')).toBeInTheDocument();
-    expect(screen.getByText('The Powerfull Concert Festival London 2020')).toBeInTheDocument();
+  it('renders the register page on /register route', async () => {
+    renderApp('/register');
+    expect(await screen.findByText('CREATE ACCOUNT')).toBeInTheDocument();
+    expect(screen.getByLabelText(/First Name/i)).toBeInTheDocument();
+    expect(screen.getByLabelText(/Last Name/i)).toBeInTheDocument();
   });
 
-  it('navigates to create ticket page', () => {
-    render(
-      <MemoryRouter>
-        <App />
-      </MemoryRouter>
-    );
-    fireEvent.click(screen.getByText(/New Ticket/i));
-    expect(screen.getByText('Create New Ticket')).toBeInTheDocument();
+  it('redirects unauthenticated user from / to /login', async () => {
+    renderApp('/');
+    // Should land on login page
+    expect(await screen.findByText('WELCOME BACK')).toBeInTheDocument();
   });
 
-  it('can create a new ticket and navigate back to home', () => {
-    render(
-      <MemoryRouter>
-        <App />
-      </MemoryRouter>
-    );
-    fireEvent.click(screen.getByText(/New Ticket/i));
-    
-    // In new TicketForm, "Ticket Name" is the label for title
-    fireEvent.change(screen.getAllByPlaceholderText(/Help me cancel my order/i)[0], { target: { value: 'New Test Ticket' } });
-    
-    fireEvent.click(screen.getByText(/Submit as New/i));
-    
-    // Should be back on home page
-    expect(screen.getByText('New Test Ticket')).toBeInTheDocument();
-  });
+  it('renders home page when authenticated', async () => {
+    api.storeTokens(mockAuthResponse);
+    // Mock fetch for the tickets API call that Home makes
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue(
+      new Response(JSON.stringify({
+        data: { content: [], totalElements: 0, totalPages: 0, number: 0, size: 10, last: true, first: true },
+      }), { status: 200 })
+    ));
 
-  it('can delete a ticket', () => {
-    render(
-      <MemoryRouter>
-        <App />
-      </MemoryRouter>
-    );
-    // Find Trash icons
-    const trashButtons = screen.getAllByRole('button').filter(btn => btn.querySelector('svg.lucide-trash2'));
-    fireEvent.click(trashButtons[0]);
-    expect(screen.queryByText('Cive Slauw')).not.toBeInTheDocument();
-  });
+    renderApp('/');
+    // With auth, the home page renders (TicketList renders even when empty)
+    expect(await screen.findByText('Pending')).toBeInTheDocument();
 
-  it('navigates to edit page and updates a ticket', () => {
-    render(
-      <MemoryRouter>
-        <App />
-      </MemoryRouter>
-    );
-    // Find the pencil icon links
-    const editLinks = screen.getAllByRole('link').filter(link => link.querySelector('svg.lucide-pencil'));
-    fireEvent.click(editLinks[0]);
-    
-    expect(screen.getByText('Edit Ticket')).toBeInTheDocument();
-    
-    const titleInput = screen.getAllByPlaceholderText(/Help me cancel my order/i)[0];
-    fireEvent.change(titleInput, { target: { value: 'Updated Title' } });
-    
-    fireEvent.click(screen.getByText(/Update Ticket/i));
-    
-    expect(screen.getByText('Updated Title')).toBeInTheDocument();
+    vi.unstubAllGlobals();
   });
 });

@@ -2,8 +2,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { AlertCircle } from 'lucide-react';
 import { TicketForm } from '../components/TicketForm';
-
-const BASE_URL = 'http://localhost:8080';
+import { apiClient } from '../services/api';
 
 export function CreateTicket() {
   const navigate = useNavigate();
@@ -14,11 +13,8 @@ export function CreateTicket() {
     setLoading(true);
     setError(null);
     try {
-      const response = await fetch(`${BASE_URL}/api/tickets`, {
+      await apiClient('/api/tickets', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
         body: JSON.stringify({
           title: data.title,
           description: data.description,
@@ -30,11 +26,6 @@ export function CreateTicket() {
           customFields: {}
         }),
       });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || `Failed to create ticket (${response.status})`);
-      }
 
       navigate('/');
     } catch (err: unknown) {

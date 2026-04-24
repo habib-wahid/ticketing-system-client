@@ -1,9 +1,8 @@
 import { useState, useEffect, useCallback } from 'react';
 import type { Ticket, TicketFilterStatus, PagedResponse } from '../types/ticket';
 import { TicketList } from '../components/TicketList';
-
-const USER_ID = 'usr_75100e55';
-const BASE_URL = 'http://localhost:8080';
+import { apiClient } from '../services/api';
+import { useAuth } from '../context/AuthContext';
 
 interface TabConfig {
   label: string;
@@ -16,6 +15,7 @@ const TABS: TabConfig[] = [
 ];
 
 export function AssignedTickets() {
+  const { user } = useAuth();
   const [activeTab, setActiveTab] = useState<TicketFilterStatus>('PENDING');
   const [tickets, setTickets] = useState<Ticket[]>([]);
   const [pageInfo, setPageInfo] = useState<Omit<PagedResponse<Ticket>, 'content'>>({
@@ -30,16 +30,14 @@ export function AssignedTickets() {
   const [error, setError] = useState<string | null>(null);
 
   const fetchTickets = useCallback(async (status: TicketFilterStatus, page: number) => {
+    if (!user) return;
     setLoading(true);
     setError(null);
     try {
-      const url = `${BASE_URL}/api/tickets/assigned/${USER_ID}?status=${status}&page=${page}&size=10`;
-      const response = await fetch(url);
-      if (!response.ok) {
-        throw new Error(`Failed to fetch assigned tickets (${response.status})`);
-      }
-      const result = await response.json();
-      const paged: PagedResponse<Ticket> = result.data;
+      const result = await apiClient<{ data: PagedResponse<Ticket> }>(
+        `/api/tickets/assigned/${user.userId}?status=${status}&page=${page}&size=10`,
+      );
+      const paged = result.data;
       setTickets(paged.content ?? []);
       setPageInfo({
         totalElements: paged.totalElements,
@@ -54,7 +52,7 @@ export function AssignedTickets() {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [user]);
 
   useEffect(() => {
     fetchTickets(activeTab, 0);

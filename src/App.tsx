@@ -1,5 +1,6 @@
 import { Routes, Route } from 'react-router-dom';
 import { MainLayout } from './components/MainLayout';
+import { ProtectedRoute } from './components/ProtectedRoute';
 import { Home } from './pages/Home';
 import { AssignedTickets } from './pages/AssignedTickets';
 import { CreateTicket } from './pages/CreateTicket';
@@ -9,7 +10,6 @@ import { Register } from './pages/Register';
 import { TicketDetailPage } from './pages/TicketDetail';
 
 function App() {
-
 
   return (
     <Routes>
@@ -21,41 +21,51 @@ function App() {
       <Route
         path="/"
         element={
-          <MainLayout>
-            <Home />
-          </MainLayout>
+          <ProtectedRoute>
+            <MainLayout>
+              <Home />
+            </MainLayout>
+          </ProtectedRoute>
         }
       />
       <Route
         path="/assigned"
         element={
-          <MainLayout>
-            <AssignedTickets />
-          </MainLayout>
+          <ProtectedRoute>
+            <MainLayout>
+              <AssignedTickets />
+            </MainLayout>
+          </ProtectedRoute>
         }
       />
       <Route
         path="/new"
         element={
-          <MainLayout fullScreen>
-            <CreateTicket />
-          </MainLayout>
+          <ProtectedRoute>
+            <MainLayout fullScreen>
+              <CreateTicket />
+            </MainLayout>
+          </ProtectedRoute>
         }
       />
       <Route
         path="/edit/:id"
         element={
-          <MainLayout fullScreen>
-            <EditTicket />
-          </MainLayout>
+          <ProtectedRoute>
+            <MainLayout fullScreen>
+              <EditTicket />
+            </MainLayout>
+          </ProtectedRoute>
         }
       />
       <Route
         path="/tickets/:ticketId"
         element={
-          <MainLayout fullScreen>
-            <TicketDetailPage />
-          </MainLayout>
+          <ProtectedRoute>
+            <MainLayout fullScreen>
+              <TicketDetailPage />
+            </MainLayout>
+          </ProtectedRoute>
         }
       />
     </Routes>

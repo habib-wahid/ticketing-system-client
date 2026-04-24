@@ -1,22 +1,38 @@
 import React, { useState } from 'react';
 import { AuthLayout } from './AuthLayout';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
 
 export const Login: React.FC = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const navigate = useNavigate();
+  const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
+  const { login } = useAuth();
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // Simulate login
-    console.log('Logging in with:', email, password);
-    navigate('/');
+    setError(null);
+    setLoading(true);
+    try {
+      await login(email, password);
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'Login failed');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
-    <AuthLayout title="WELCOME BACK" subtitle="Login With Orchida mail">
+    <AuthLayout title="WELCOME BACK" subtitle="Login With You Gmail">
       <form onSubmit={handleSubmit} className="space-y-6">
+        {/* Error Message */}
+        {error && (
+          <div className="p-3 bg-red-50 border border-red-200 rounded-md text-red-600 text-sm font-medium text-center">
+            {error}
+          </div>
+        )}
+
         {/* Email Field */}
         <div className="space-y-2">
           <label htmlFor="email" className="block text-xl font-bold text-gray-800">
@@ -30,6 +46,7 @@ export const Login: React.FC = () => {
             placeholder="example@orchida-soft.com"
             className="w-full px-4 py-4 border border-gray-100 rounded-md bg-white text-gray-700 placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-[#2D336B]/20 text-lg shadow-sm"
             required
+            disabled={loading}
           />
         </div>
 
@@ -46,6 +63,7 @@ export const Login: React.FC = () => {
             placeholder="@B123"
             className="w-full px-4 py-4 border border-gray-100 rounded-md bg-white text-gray-700 placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-[#2D336B]/20 text-lg shadow-sm"
             required
+            disabled={loading}
           />
         </div>
 
@@ -66,9 +84,13 @@ export const Login: React.FC = () => {
         {/* Submit Button */}
         <button
           type="submit"
-          className="w-full bg-[#2D336B] text-white py-4 rounded-md text-2xl font-bold hover:bg-[#232855] transition-colors shadow-lg mt-8"
+          disabled={loading}
+          className="w-full bg-[#2D336B] text-white py-4 rounded-md text-2xl font-bold hover:bg-[#232855] transition-colors shadow-lg mt-8 disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-3"
         >
-          Submit
+          {loading && (
+            <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+          )}
+          {loading ? 'Signing in...' : 'Submit'}
         </button>
 
         {/* Register Link */}
