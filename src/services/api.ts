@@ -148,6 +148,7 @@ export const authApi = {
 
 // ── Category API calls ────────────────────────────────────────
 
+import type { PagedResponse } from '../types/ticket';
 import type {
   ComplaintCategoryResponse,
   ComplaintCategoryCreateRequest,
@@ -155,9 +156,27 @@ import type {
 } from '../types/category';
 
 export const categoryApi = {
-  async findAll(): Promise<ComplaintCategoryResponse[]> {
-    const json = await apiClient<ApiResponse<ComplaintCategoryResponse[]>>('/api/complaint-categories');
-    return json.data;
+  async findAll(page: number = 0, size: number = 20, name?: string): Promise<PagedResponse<ComplaintCategoryResponse>> {
+    const params = new URLSearchParams({
+      page: page.toString(),
+      size: size.toString(),
+    });
+    if (name) {
+      params.append('name', name);
+    }
+    const json = await apiClient<any>(`/api/complaint-categories?${params.toString()}`);
+
+    // Safely extract data in case structure is different
+    const pagedData = json?.data || json;
+    return {
+      content: pagedData?.content || [],
+      totalElements: pagedData?.totalElements || 0,
+      totalPages: pagedData?.totalPages || 0,
+      number: pagedData?.number || 0,
+      size: pagedData?.size || 0,
+      last: pagedData?.last || true,
+      first: pagedData?.first || true,
+    };
   },
 
   async findById(id: string): Promise<ComplaintCategoryResponse> {
