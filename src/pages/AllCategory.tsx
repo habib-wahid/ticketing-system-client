@@ -27,6 +27,7 @@ export function AllCategory() {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [categoryName, setCategoryName] = useState('');
   const [submitting, setSubmitting] = useState(false);
+  const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
 
   // Debounce search input
   useEffect(() => {
@@ -108,10 +109,15 @@ export function AllCategory() {
     }
   };
 
-  const handleDelete = async (id: string) => {
-    if (!window.confirm('Are you sure you want to delete this category?')) return;
+  const confirmDelete = (id: string) => {
+    setDeleteConfirmId(id);
+  };
+
+  const handleDelete = async () => {
+    if (!deleteConfirmId) return;
     try {
-      await categoryApi.delete(id);
+      await categoryApi.delete(deleteConfirmId);
+      setDeleteConfirmId(null);
       fetchCategories(currentPage, debouncedSearch);
     } catch (err: any) {
       alert(err.message || 'Failed to delete category');
@@ -209,7 +215,7 @@ export function AllCategory() {
                           <Edit2 size={16} />
                         </button>
                         <button
-                          onClick={() => handleDelete(category.id)}
+                          onClick={() => confirmDelete(category.id)}
                           className="p-1.5 text-red-600 hover:bg-red-50 rounded transition-colors"
                           title="Delete"
                         >
@@ -338,6 +344,36 @@ export function AllCategory() {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+      {/* Delete Confirmation Modal */}
+      {deleteConfirmId && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-xl shadow-lg w-full max-w-sm overflow-hidden transform transition-all">
+            <div className="p-6 text-center">
+              <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <Trash2 size={24} className="text-red-600" />
+              </div>
+              <h3 className="text-lg font-bold text-gray-800 mb-2">Delete Category</h3>
+              <p className="text-gray-600 text-sm mb-6">
+                Are you sure you want to delete this category? This action cannot be undone.
+              </p>
+              <div className="flex justify-center gap-3">
+                <button
+                  onClick={() => setDeleteConfirmId(null)}
+                  className="px-4 py-2 text-gray-600 font-medium hover:bg-gray-100 rounded-lg transition-colors flex-1"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleDelete}
+                  className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white font-medium rounded-lg transition-colors flex-1"
+                >
+                  Delete
+                </button>
+              </div>
+            </div>
           </div>
         </div>
       )}
