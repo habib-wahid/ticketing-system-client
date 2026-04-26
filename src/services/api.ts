@@ -145,3 +145,45 @@ export const authApi = {
     return json.data;
   },
 };
+
+// ── Category API calls ────────────────────────────────────────
+
+import type {
+  ComplaintCategoryResponse,
+  ComplaintCategoryCreateRequest,
+  ComplaintCategoryUpdateRequest,
+} from '../types/category';
+
+export const categoryApi = {
+  async findAll(): Promise<ComplaintCategoryResponse[]> {
+    const json = await apiClient<ApiResponse<ComplaintCategoryResponse[]>>('/api/complaint-categories');
+    return json.data;
+  },
+
+  async findById(id: string): Promise<ComplaintCategoryResponse> {
+    const json = await apiClient<ApiResponse<ComplaintCategoryResponse>>(`/api/complaint-categories/${id}`);
+    return json.data;
+  },
+
+  async create(request: ComplaintCategoryCreateRequest): Promise<ComplaintCategoryResponse> {
+    const json = await apiClient<ApiResponse<ComplaintCategoryResponse>>('/api/complaint-categories', {
+      method: 'POST',
+      body: JSON.stringify(request),
+    });
+    return json.data;
+  },
+
+  async update(id: string, request: ComplaintCategoryUpdateRequest): Promise<ComplaintCategoryResponse> {
+    const json = await apiClient<ApiResponse<ComplaintCategoryResponse>>(`/api/complaint-categories/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(request),
+    });
+    return json.data;
+  },
+
+  async delete(id: string): Promise<void> {
+    await apiClient<ApiResponse<void>>(`/api/complaint-categories/${id}`, {
+      method: 'DELETE',
+    });
+  },
+};

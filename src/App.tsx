@@ -8,6 +8,7 @@ import { EditTicket } from './pages/EditTicket';
 import { Login } from './pages/Login';
 import { Register } from './pages/Register';
 import { TicketDetailPage } from './pages/TicketDetail';
+import { AllCategory } from './pages/AllCategory';
 
 function App() {
 
@@ -64,6 +65,16 @@ function App() {
           <ProtectedRoute>
             <MainLayout fullScreen>
               <TicketDetailPage />
+            </MainLayout>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/management/all-categories"
+        element={
+          <ProtectedRoute>
+            <MainLayout>
+              <AllCategory />
             </MainLayout>
           </ProtectedRoute>
         }
