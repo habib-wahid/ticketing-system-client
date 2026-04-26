@@ -4,13 +4,13 @@ import { useAuth } from '../context/AuthContext';
 
 export const Sidebar = () => {
   const location = useLocation();
-  const { logout } = useAuth();
+  const { logout, user } = useAuth();
 
   const menuItems = [
     { icon: LayoutDashboard, label: 'Dashboard', path: '/dashboard' },
     { icon: Ticket, label: 'My Tickets', path: '/' },
     { icon: Ticket, label: 'Assigned Ticket', path: '/assigned' },
-    { icon: Settings, label: 'Settings', path: '/settings' },
+    ...(user?.role === 'ADMIN' ? [{ icon: Settings, label: 'Management', path: '/management' }] : []),
   ];
 
   return (
