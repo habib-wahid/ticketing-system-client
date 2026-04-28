@@ -14,6 +14,7 @@ export const Sidebar = () => {
 
   const menuItems = [
     { icon: LayoutDashboard, label: 'Dashboard', path: '/dashboard' },
+    ...(user?.role === 'ADMIN' ? [{ icon: Ticket, label: 'All-Tickets', path: '/all-tickets' }] : []),
     { icon: Ticket, label: 'My Tickets', path: '/' },
     { icon: Ticket, label: 'Assigned Tickets', path: '/assigned' },
     ...(user?.role === 'ADMIN' ? [{

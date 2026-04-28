@@ -1,10 +1,11 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useParams, Link } from 'react-router-dom';
 import {
-  ArrowLeft, X, Pencil, ChevronDown, Paperclip, Plus, Clock, ExternalLink, Search, MessageSquare, Send
+  ArrowLeft, X, Pencil, ChevronDown, Paperclip, Plus, Clock, ExternalLink, Search, MessageSquare
 } from 'lucide-react';
 import type { TicketDetail, TicketCommentDetail } from '../types/ticket';
 import { apiClient, categoryApi } from '../services/api';
+import { useToast } from '../components/ToastProvider';
 import type { ComplaintCategoryResponse } from '../types/category';
 
 export function EditTicket() {
@@ -60,6 +61,8 @@ export function EditTicket() {
     }
   }, [id]);
 
+  const { showToast } = useToast();
+
   const updateField = async (fieldName: string, value: any) => {
     setUpdatingField(fieldName);
     try {
@@ -71,7 +74,7 @@ export function EditTicket() {
       setTicket(updatedData.data);
       setEditingField(null);
     } catch (err: any) {
-      alert(err.message);
+      showToast(err?.message || 'Failed to update field', 'error');
     } finally {
       setUpdatingField(null);
     }
@@ -137,7 +140,7 @@ export function EditTicket() {
       setTicket(updatedData.data);
       setNewComment('');
     } catch (err: any) {
-      alert(err.message);
+      showToast(err?.message || 'Failed to add comment', 'error');
     } finally {
       setIsPostingComment(false);
     }

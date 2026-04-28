@@ -3,6 +3,7 @@ import { MainLayout } from './components/MainLayout';
 import { ProtectedRoute } from './components/ProtectedRoute';
 import { Home } from './pages/Home';
 import { AssignedTickets } from './pages/AssignedTickets';
+import { AllTickets } from './pages/AllTickets';
 import { CreateTicket } from './pages/CreateTicket';
 import { EditTicket } from './pages/EditTicket';
 import { Login } from './pages/Login';
@@ -35,6 +36,16 @@ function App() {
           <ProtectedRoute>
             <MainLayout>
               <AssignedTickets />
+            </MainLayout>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/all-tickets"
+        element={
+          <ProtectedRoute adminOnly>
+            <MainLayout>
+              <AllTickets />
             </MainLayout>
           </ProtectedRoute>
         }

@@ -1,14 +1,21 @@
-import { useState, useEffect, useCallback } from 'react';
 import {
-  Minus, Square, X, ChevronDown, Package, HelpCircle,
-  Lightbulb, Undo2, Redo2, Type, Bold, Italic, Underline,
-  Strikethrough, List, ListOrdered, AlignLeft, AlignCenter,
-  AlignRight, Smile, Paperclip, Mic, Link2, Image as ImageIcon,
-  Cpu, FileText, Share2, Upload, User, Settings, Shield, Zap
+  ChevronDown,
+  Cpu,
+  HelpCircle,
+  Lightbulb,
+  Minus,
+  Package,
+  Paperclip,
+  Settings, Shield,
+  Square,
+  Upload, User,
+  X,
+  Zap
 } from 'lucide-react';
-import type { Ticket, TicketAttachmentDetail } from '../types/ticket';
+import { useCallback, useEffect, useState } from 'react';
 import { categoryApi } from '../services/api';
 import type { ComplaintCategoryResponse } from '../types/category';
+import type { Ticket, TicketAttachmentDetail } from '../types/ticket';
 
 interface TicketFormProps {
   initialData?: Ticket;

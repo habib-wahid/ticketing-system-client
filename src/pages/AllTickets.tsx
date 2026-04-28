@@ -1,0 +1,97 @@
+import { useState, useEffect, useCallback } from 'react';
+import type { Ticket, TicketFilterStatus, PagedResponse } from '../types/ticket';
+import { TicketList } from '../components/TicketList';
+import { apiClient } from '../services/api';
+
+interface TabConfig {
+  label: string;
+  status: TicketFilterStatus;
+}
+
+const TABS: TabConfig[] = [
+  { label: 'Pending', status: 'PENDING' },
+  { label: 'Resolved', status: 'RESOLVED' },
+];
+
+export function AllTickets() {
+  const [activeTab, setActiveTab] = useState<TicketFilterStatus>('PENDING');
+  const [tickets, setTickets] = useState<Ticket[]>([]);
+  const [pageInfo, setPageInfo] = useState<Omit<PagedResponse<Ticket>, 'content'>>({
+    totalElements: 0,
+    totalPages: 0,
+    number: 0,
+    size: 10,
+    last: true,
+    first: true,
+  });
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  const fetchTickets = useCallback(async (status: TicketFilterStatus, page: number) => {
+    setLoading(true);
+    setError(null);
+    try {
+      const result = await apiClient<{ data: PagedResponse<Ticket> }>(
+        `/api/tickets?status=${status}&page=${page}&size=10`,
+      );
+      const paged = result.data;
+      setTickets(paged.content ?? []);
+      setPageInfo({
+        totalElements: paged.totalElements,
+        totalPages: paged.totalPages,
+        number: paged.number,
+        size: paged.size,
+        last: paged.last,
+        first: paged.first,
+      });
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'Failed to fetch tickets');
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchTickets(activeTab, 0);
+  }, [activeTab, fetchTickets]);
+
+  const handleTabChange = (status: TicketFilterStatus) => {
+    setActiveTab(status);
+  };
+
+  const handlePageChange = (page: number) => {
+    fetchTickets(activeTab, page);
+  };
+
+  const handleDelete = (id: string) => {
+    setTickets((prev) => prev.filter((t) => t.ticketId !== id));
+  };
+
+  return (
+    <div className="w-full space-y-0">
+      {/* Content */}
+      {loading && (
+        <div className="p-12 text-center text-gray-400 font-medium">
+          <div className="inline-block w-6 h-6 border-2 border-[#2D336B] border-t-transparent rounded-full animate-spin mb-3" />
+          <p>Loading tickets...</p>
+        </div>
+      )}
+
+      {error && (
+        <div className="p-8 text-center text-red-500 font-medium bg-red-50 rounded-lg border border-red-100">
+          ⚠️ {error}
+        </div>
+      )}
+
+      {!loading && !error && (
+        <TicketList
+          tickets={tickets}
+          onDelete={handleDelete}
+          pageInfo={pageInfo}
+          onPageChange={handlePageChange}
+          hideManageActions={true}
+        />
+      )}
+    </div>
+  );
+}
