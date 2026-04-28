@@ -32,7 +32,7 @@ export interface Ticket {
   ticketId: string;
   title: string;
   description: string;
-  category: string;
+  category: { id: string; name: string };
   priority: string;
   status: string;
   createdBy?: TicketCreatedBy | null;
@@ -99,7 +99,7 @@ export interface TicketDetail {
   ticketId: string;
   title: string;
   description: string;
-  category: string;
+  category: { id: string; name: string };
   priority: string;
   status: string;
   createdBy?: TicketCreatedBy | null;

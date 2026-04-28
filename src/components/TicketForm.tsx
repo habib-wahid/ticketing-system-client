@@ -1,12 +1,14 @@
-import React, { useState } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import {
   Minus, Square, X, ChevronDown, Package, HelpCircle,
   Lightbulb, Undo2, Redo2, Type, Bold, Italic, Underline,
   Strikethrough, List, ListOrdered, AlignLeft, AlignCenter,
   AlignRight, Smile, Paperclip, Mic, Link2, Image as ImageIcon,
-  Cpu, FileText, Share2, Upload, User
+  Cpu, FileText, Share2, Upload, User, Settings, Shield, Zap
 } from 'lucide-react';
 import type { Ticket, TicketAttachmentDetail } from '../types/ticket';
+import { categoryApi } from '../services/api';
+import type { ComplaintCategoryResponse } from '../types/category';
 
 interface TicketFormProps {
   initialData?: Ticket;
@@ -15,17 +17,35 @@ interface TicketFormProps {
 }
 
 export const TicketForm: React.FC<TicketFormProps> = ({ initialData, onSubmit, onCancel }) => {
+  const [categories, setCategories] = useState<ComplaintCategoryResponse[]>([]);
+  const [fetchingCategories, setFetchingCategories] = useState(true);
+
   const [formData, setFormData] = useState({
     title: initialData?.title || '',
     description: initialData?.description || '',
     priority: initialData?.priority || 'LOW',
-    category: initialData?.category || 'GENERAL',
+    complaintCategoryId: initialData?.category?.id || '',
     assignedToUserId: initialData?.assignedTo?.userId || '',
     tags: initialData?.tags || [] as string[],
     createdByUserId: initialData?.createdBy?.userId || 'usr_3741f137',
     status: initialData?.status || 'PENDING',
     attachments: initialData?.attachments || [] as TicketAttachmentDetail[],
   });
+
+  const fetchCategories = useCallback(async () => {
+    try {
+      const data = await categoryApi.findAll(0, 100); // Fetch a good number of categories
+      setCategories(data.content || []);
+    } catch (err) {
+      console.error('Failed to fetch categories:', err);
+    } finally {
+      setFetchingCategories(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchCategories();
+  }, [fetchCategories]);
 
   const [isFocused, setIsFocused] = useState<{ [key: string]: boolean }>({});
   const [isCategoryDropdownOpen, setIsCategoryDropdownOpen] = useState(false);
@@ -80,13 +100,24 @@ export const TicketForm: React.FC<TicketFormProps> = ({ initialData, onSubmit, o
     { value: 'CRITICAL', label: 'Critical', color: 'bg-purple-500' },
   ];
 
-  const categoryOptions = [
-    { value: 'TECHNICAL', label: 'Technical', icon: Cpu },
-    { value: 'BILLING', label: 'Billing', icon: Package },
-    { value: 'ACCOUNT', label: 'Account', icon: User },
-    { value: 'GENERAL', label: 'General', icon: HelpCircle },
-    { value: 'FEATURE_REQUEST', label: 'Feature Request', icon: Lightbulb },
-  ];
+  // Helper to get icon for category name
+  const getCategoryIcon = (name: string) => {
+    const n = name.toUpperCase();
+    if (n.includes('TECH')) return Cpu;
+    if (n.includes('BILL')) return Package;
+    if (n.includes('ACC')) return User;
+    if (n.includes('FEAT') || n.includes('LIGHT')) return Lightbulb;
+    if (n.includes('BUG') || n.includes('ISSUE')) return Shield;
+    if (n.includes('SPEED') || n.includes('PERF')) return Zap;
+    if (n.includes('SETT') || n.includes('CONF')) return Settings;
+    return HelpCircle;
+  };
+
+  const categoryOptions = categories.map(cat => ({
+    value: cat.id,
+    label: cat.name,
+    icon: getCategoryIcon(cat.name)
+  }));
 
   return (
     <div className="bg-white rounded-xl shadow-sm border border-gray-100 flex flex-col h-full w-full font-sans overflow-hidden">
@@ -230,7 +261,15 @@ export const TicketForm: React.FC<TicketFormProps> = ({ initialData, onSubmit, o
               >
                 <div className="flex items-center gap-3">
                   {(() => {
-                    const opt = categoryOptions.find(o => o.value === formData.category) || categoryOptions[3];
+                    const opt = categoryOptions.find(o => o.value === formData.complaintCategoryId);
+                    if (!opt) {
+                      return (
+                        <>
+                          <HelpCircle size={18} className="text-gray-400" />
+                          <span className="text-gray-400 font-medium">Select Category</span>
+                        </>
+                      );
+                    }
                     const Icon = opt.icon;
                     return (
                       <>
@@ -249,22 +288,26 @@ export const TicketForm: React.FC<TicketFormProps> = ({ initialData, onSubmit, o
               {/* Dropdown Menu */}
               {isCategoryDropdownOpen && (
                 <div className="absolute z-10 w-full bg-white border border-gray-100 rounded-xl shadow-xl mt-2 p-1 overflow-hidden animate-in fade-in zoom-in duration-150">
-                  {categoryOptions.map((opt) => (
+                  {fetchingCategories ? (
+                    <div className="p-4 text-center text-xs text-gray-400 font-bold animate-pulse">Loading categories...</div>
+                  ) : categoryOptions.length === 0 ? (
+                    <div className="p-4 text-center text-xs text-gray-400 font-bold">No categories available</div>
+                  ) : categoryOptions.map((opt) => (
                     <button
                       key={opt.value}
                       type="button"
                       onClick={() => {
-                        setFormData({ ...formData, category: opt.value as any });
+                        setFormData({ ...formData, complaintCategoryId: opt.value });
                         setIsCategoryDropdownOpen(false);
                       }}
-                      className={`w-full flex items-center gap-3 px-3 py-3 rounded-lg text-sm transition-all ${formData.category === opt.value
+                      className={`w-full flex items-center gap-3 px-3 py-3 rounded-lg text-sm transition-all ${formData.complaintCategoryId === opt.value
                         ? 'bg-[#10B981]/10 text-[#10B981] font-bold'
                         : 'text-gray-500 hover:bg-gray-50 hover:text-gray-900'
                         }`}
                     >
                       <opt.icon
                         size={16}
-                        className={formData.category === opt.value ? 'text-[#10B981]' : 'text-gray-400'}
+                        className={formData.complaintCategoryId === opt.value ? 'text-[#10B981]' : 'text-gray-400'}
                       />
                       {opt.label}
                     </button>

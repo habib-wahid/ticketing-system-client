@@ -4,7 +4,8 @@ import {
   ArrowLeft, X, Pencil, ChevronDown, Paperclip, Plus, Clock, ExternalLink, Search, MessageSquare, Send
 } from 'lucide-react';
 import type { TicketDetail, TicketCommentDetail } from '../types/ticket';
-import { apiClient } from '../services/api';
+import { apiClient, categoryApi } from '../services/api';
+import type { ComplaintCategoryResponse } from '../types/category';
 
 export function EditTicket() {
   const { id } = useParams<{ id: string }>();
@@ -22,6 +23,8 @@ export function EditTicket() {
   const [searchQuery, setSearchQuery] = useState('');
   const [staffResults, setStaffResults] = useState<any[]>([]);
   const [isSearchingStaff, setIsSearchingStaff] = useState(false);
+  const [categories, setCategories] = useState<ComplaintCategoryResponse[]>([]);
+  const [fetchingCategories, setFetchingCategories] = useState(true);
 
   // Tag editing states
   const [newTag, setNewTag] = useState('');
@@ -41,7 +44,20 @@ export function EditTicket() {
         setLoading(false);
       }
     };
-    if (id) fetchTicket();
+    const fetchCategories = async () => {
+      try {
+        const data = await categoryApi.findAll(0, 100);
+        setCategories(data.content || []);
+      } catch (err) {
+        console.error(err);
+      } finally {
+        setFetchingCategories(false);
+      }
+    };
+    if (id) {
+      fetchTicket();
+      fetchCategories();
+    }
   }, [id]);
 
   const updateField = async (fieldName: string, value: any) => {
@@ -378,20 +394,22 @@ export function EditTicket() {
             </div>
           </div>
 
-          {/* Category Selector */}
           <div className="space-y-4 pt-4">
             <label className="text-[10px] font-black text-gray-400 tracking-[0.2em] uppercase">Category</label>
             <div className="relative">
               <select
-                className="w-full bg-white border border-gray-100 rounded-xl px-4 py-3 text-sm font-bold text-gray-700 appearance-none focus:ring-0 focus:border-[#10B981] transition-all cursor-pointer"
-                value={ticket.category}
-                onChange={(e) => updateField('category', e.target.value)}
+                className="w-full bg-white border border-gray-100 rounded-xl px-4 py-3 text-sm font-bold text-gray-700 appearance-none focus:ring-0 focus:border-[#10B981] transition-all cursor-pointer disabled:opacity-50"
+                value={ticket.category?.id || ''}
+                onChange={(e) => updateField('complaintCategoryId', e.target.value)}
+                disabled={fetchingCategories || updatingField === 'complaintCategoryId'}
               >
-                <option value="TECHNICAL">Technical</option>
-                <option value="BILLING">Billing</option>
-                <option value="ACCOUNT">Account</option>
-                <option value="GENERAL">General</option>
-                <option value="FEATURE_REQUEST">Feature Request</option>
+                {fetchingCategories ? (
+                  <option>Loading...</option>
+                ) : (
+                  categories.map(cat => (
+                    <option key={cat.id} value={cat.id}>{cat.name}</option>
+                  ))
+                )}
               </select>
               <ChevronDown size={16} className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
             </div>

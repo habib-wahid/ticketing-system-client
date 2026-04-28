@@ -18,7 +18,7 @@ export function CreateTicket() {
         body: JSON.stringify({
           title: data.title,
           description: data.description,
-          category: data.category,
+          complaintCategoryId: data.complaintCategoryId,
           priority: data.priority,
           createdByUserId: data.createdByUserId,
           assignedToUserId: data.assignedToUserId || null,

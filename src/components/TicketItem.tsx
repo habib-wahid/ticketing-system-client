@@ -23,7 +23,7 @@ export const TicketItem: React.FC<TicketItemProps> = ({ ticket, onDelete, isSele
       </td>
       <td className="py-4 px-4 text-sm text-gray-500 font-medium">{ticket.ticketId}</td>
       <td className="py-4 px-4 text-sm text-gray-600 max-w-[200px] truncate">{ticket.title}</td>
-      <td className="py-4 px-4 text-sm font-medium text-gray-900">{ticket.category || '-'}</td>
+      <td className="py-4 px-4 text-sm font-medium text-gray-900">{ticket.category?.name || '-'}</td>
       <td className="py-4 px-4 text-sm text-gray-500">{ticket.priority || '-'}</td>
       <td className="py-4 px-4 text-sm text-gray-500">{ticket.status || '-'}</td>
       <td className="py-4 px-4 text-sm text-gray-500">
