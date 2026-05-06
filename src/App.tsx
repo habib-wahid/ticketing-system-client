@@ -1,6 +1,7 @@
 import { Routes, Route } from 'react-router-dom';
 import { MainLayout } from './components/MainLayout';
 import { ProtectedRoute } from './components/ProtectedRoute';
+import { Dashboard } from './pages/Dashboard';
 import { Home } from './pages/Home';
 import { AssignedTickets } from './pages/AssignedTickets';
 import { AllTickets } from './pages/AllTickets';
@@ -20,6 +21,16 @@ function App() {
       <Route path="/register" element={<Register />} />
 
       {/* Main App Routes - With Sidebar/Header */}
+      <Route
+        path="/dashboard"
+        element={
+          <ProtectedRoute>
+            <MainLayout>
+              <Dashboard />
+            </MainLayout>
+          </ProtectedRoute>
+        }
+      />
       <Route
         path="/"
         element={

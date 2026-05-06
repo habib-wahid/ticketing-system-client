@@ -5,6 +5,9 @@
 		},
 		{
 			"path": "../ticketing-app"
+		},
+		{
+			"path": "../../Desktop"
 		}
 	],
 	"settings": {
