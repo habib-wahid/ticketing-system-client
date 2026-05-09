@@ -48,9 +48,7 @@ interface TicketPriorityApiResponse {
   critical: number;
 }
 
-interface TicketCategoryApiResponse {
-  categories: CategoryCount[];
-}
+interface TicketCategoryApiResponse extends Array<CategoryCount> {}
 
 type DateRange = { from: string; to: string };
 
@@ -110,7 +108,7 @@ export function Dashboard() {
             critical: priorityResult.data.critical ?? 0,
           },
           categoryStats: {
-            categories: categoryResult.data.categories ?? [],
+            categories: (Array.isArray(categoryResult.data) ? categoryResult.data : []) as CategoryCount[],
           },
         });
       } catch (err: unknown) {
@@ -258,7 +256,7 @@ export function Dashboard() {
                 <PieChart>
                   <Pie
                     data={dashboardData.categoryStats.categories.map((item, index) => ({
-                      name: item.categoryId,
+                      name: item.categoryName,
                       value: item.count,
                       fill: ['#3b82f6', '#8b5cf6', '#ec4899', '#f59e0b', '#10b981', '#06b6d4', '#f97316', '#6366f1'][index % 8],
                     }))}
