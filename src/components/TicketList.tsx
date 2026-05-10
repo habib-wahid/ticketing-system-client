@@ -7,15 +7,18 @@ import {
   ChevronsLeft,
   ChevronsRight,
   Plus,
+  Search,
+  SlidersHorizontal,
 } from 'lucide-react';
 import type { Ticket, PagedResponse } from '../types/ticket';
 import { TicketItem } from './TicketItem';
+import { FilterSidebar } from './FilterSidebar';
 
 interface TicketListProps {
   tickets: Ticket[];
   onDelete: (id: string) => void;
   pageInfo: Omit<PagedResponse<Ticket>, 'content'>;
-  onPageChange: (page: number) => void;
+  onPageChange: (page: number, filters?: any) => void;
   hideManageActions?: boolean;
 }
 
@@ -27,8 +30,56 @@ export const TicketList: React.FC<TicketListProps> = ({
   hideManageActions = false,
 }) => {
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [filters, setFilters] = useState({
+    priority: 'all',
+    category: 'all',
+    categoryId: '',
+    status: 'all',
+    flag: 'all',
+    issuer: '',
+    issuerName: '',
+    assignedTo: '',
+    assignedToName: '',
+    startDate: '',
+    endDate: '',
+  });
+  const [isFilterOpen, setIsFilterOpen] = useState(false);
 
   const { number: currentPage, totalPages, totalElements, first, last } = pageInfo;
+
+  const hasActiveFilters = 
+    filters.priority !== 'all' || 
+    filters.category !== 'all' || 
+    filters.status !== 'all' || 
+    filters.flag !== 'all' || 
+    filters.issuer !== '' || 
+    filters.assignedTo !== '' || 
+    filters.startDate !== '' || 
+    filters.endDate !== '';
+
+  const handleFilterApply = (newFilters: any) => {
+    setFilters(newFilters);
+    onPageChange(0, newFilters);
+  };
+
+  const handleFilterReset = () => {
+    const resetFilters = {
+      priority: 'all',
+      category: 'all',
+      categoryId: 'all',
+      status: 'all',
+      flag: 'all',
+      issuer: '',
+      issuerName: '',
+      assignedTo: '',
+      assignedToName: '',
+      startDate: '',
+      endDate: '',
+    };
+    setFilters(resetFilters);
+    onPageChange(0, resetFilters);
+  };
 
   const handleSelectAll = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.checked) {
@@ -54,6 +105,10 @@ export const TicketList: React.FC<TicketListProps> = ({
     return Array.from({ length: end - start + 1 }, (_, i) => start + i);
   };
 
+  const handlePageChange = (page: number) => {
+    onPageChange(page, filters);
+  };
+
   if (tickets.length === 0) {
     return (
       <div className="text-center py-16 bg-white rounded-lg border-2 border-dashed border-gray-200 shadow-sm">
@@ -73,50 +128,71 @@ export const TicketList: React.FC<TicketListProps> = ({
 
   return (
     <div className="space-y-6">
-      {/* Top Action Bar */}
-      <div className="flex flex-wrap gap-4 items-center">
-        {!hideManageActions && (
-          <Link
-            to="/new"
-            className="bg-[#10B981] hover:bg-[#059669] text-white px-6 py-3 rounded-lg font-bold flex items-center gap-2 transition-colors shadow-sm"
-          >
-            <Plus size={20} />
-            New Ticket
-          </Link>
-        )}
+      {/* Top Action Bar with Search and Filters */}
+      <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+        {/* Left Side: New Ticket Button */}
+        <div className="flex items-center gap-4">
+          {!hideManageActions && (
+            <Link
+              to="/new"
+              className="bg-[#10B981] hover:bg-[#059669] text-white px-6 py-3 rounded-lg font-bold flex items-center gap-2 transition-colors shadow-sm whitespace-nowrap"
+            >
+              <Plus size={20} />
+              New Ticket
+            </Link>
+          )}
 
-        <div className="bg-white border border-gray-100 rounded-lg px-6 py-2 flex items-center gap-4 shadow-sm">
-          <div className="p-2 bg-gray-50 rounded-full">
-            <TicketIcon size={20} className="text-gray-400" />
-          </div>
-          <div>
-            <div className="text-[10px] text-gray-400 font-medium uppercase tracking-wider">Total Tickets</div>
-            <div className="text-lg font-bold text-gray-900">{totalElements.toLocaleString()} Tickets</div>
+          {/* Total Tickets Card */}
+          <div className="bg-gray-50 border border-gray-200 rounded-lg px-4 py-3 flex items-center gap-3 whitespace-nowrap">
+            <div className="p-2 bg-white rounded-full">
+              <TicketIcon size={18} className="text-gray-400" />
+            </div>
+            <div>
+              <div className="text-[9px] text-gray-400 font-medium uppercase tracking-wider">Total</div>
+              <div className="text-sm font-bold text-gray-900">{totalElements.toLocaleString()} Tickets</div>
+            </div>
           </div>
         </div>
 
-        {!hideManageActions && (
-          <>
-            <div className="bg-white border border-gray-100 rounded-lg px-6 py-2 flex items-center gap-3 shadow-sm ml-auto">
+        {/* Right Side: Search and Filters */}
+        <div className="flex flex-col gap-3 md:flex-row md:items-center md:gap-3 flex-1 md:flex-none md:ml-auto">
+          {/* Search Bar */}
+          <div className="flex-1 md:flex-none md:w-48 lg:w-64">
+            <div className="relative">
+              <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
               <input
-                type="checkbox"
-                checked={true}
-                readOnly
-                className="w-5 h-5 rounded border-gray-300 text-[#433878] focus:ring-[#433878]"
+                type="text"
+                placeholder="Search..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="w-full pl-9 pr-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#433878]/20 focus:border-[#433878] transition-all placeholder-gray-400"
               />
-              <span className="text-sm font-medium text-gray-700">Active</span>
             </div>
+          </div>
 
-            <button className="bg-[#F59E0B] hover:bg-[#D97706] text-white px-8 py-3 rounded-lg font-bold transition-colors shadow-sm">
-              Edit
-            </button>
-
-            <button className="bg-[#EF4444] hover:bg-[#DC2626] text-white px-8 py-3 rounded-lg font-bold transition-colors shadow-sm">
-              Delete
-            </button>
-          </>
-        )}
+          {/* Filter Button */}
+          <button
+            onClick={() => setIsFilterOpen(!isFilterOpen)}
+            className="px-3 py-2 border border-gray-200 rounded-lg text-sm font-medium text-gray-600 hover:bg-gray-50 hover:border-gray-300 transition-all flex items-center gap-2 whitespace-nowrap relative"
+          >
+            <SlidersHorizontal size={14} />
+            Filter
+            {hasActiveFilters && (
+              <span className="ml-1 w-2 h-2 bg-[#433878] rounded-full"></span>
+            )}
+          </button>
+        </div>
       </div>
+
+      <FilterSidebar
+        isOpen={isFilterOpen}
+        onClose={() => setIsFilterOpen(false)}
+        filters={filters}
+        onApply={handleFilterApply}
+        onReset={handleFilterReset}
+      />
+
+      {/* Table Container */}
 
       {/* Table Container */}
       <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
@@ -169,7 +245,7 @@ export const TicketList: React.FC<TicketListProps> = ({
 
           <div className="flex items-center gap-2">
             <button
-              onClick={() => onPageChange(0)}
+              onClick={() => handlePageChange(0)}
               disabled={first}
               className="p-2 text-gray-400 hover:text-[#433878] transition-colors rounded-lg hover:bg-gray-50 disabled:opacity-30 disabled:cursor-not-allowed"
               title="First page"
@@ -177,7 +253,7 @@ export const TicketList: React.FC<TicketListProps> = ({
               <ChevronsLeft size={20} />
             </button>
             <button
-              onClick={() => onPageChange(currentPage - 1)}
+              onClick={() => handlePageChange(currentPage - 1)}
               disabled={first}
               className="p-2 text-gray-400 hover:text-[#433878] transition-colors rounded-lg hover:bg-gray-50 disabled:opacity-30 disabled:cursor-not-allowed"
               title="Previous page"
@@ -189,7 +265,7 @@ export const TicketList: React.FC<TicketListProps> = ({
               {getPageNumbers().map((pageNum) => (
                 <button
                   key={pageNum}
-                  onClick={() => onPageChange(pageNum)}
+                  onClick={() => handlePageChange(pageNum)}
                   className={`w-8 h-8 rounded-lg flex items-center justify-center text-sm font-bold transition-colors ${pageNum === currentPage
                     ? 'bg-[#10B981] text-white'
                     : 'text-gray-400 hover:bg-gray-50'
@@ -201,7 +277,7 @@ export const TicketList: React.FC<TicketListProps> = ({
             </div>
 
             <button
-              onClick={() => onPageChange(currentPage + 1)}
+              onClick={() => handlePageChange(currentPage + 1)}
               disabled={last}
               className="p-2 text-gray-400 hover:text-[#433878] transition-colors rounded-lg hover:bg-gray-50 disabled:opacity-30 disabled:cursor-not-allowed"
               title="Next page"
@@ -209,7 +285,7 @@ export const TicketList: React.FC<TicketListProps> = ({
               <ChevronRight size={20} />
             </button>
             <button
-              onClick={() => onPageChange(totalPages - 1)}
+              onClick={() => handlePageChange(totalPages - 1)}
               disabled={last}
               className="p-2 text-gray-400 hover:text-[#433878] transition-colors rounded-lg hover:bg-gray-50 disabled:opacity-30 disabled:cursor-not-allowed"
               title="Last page"

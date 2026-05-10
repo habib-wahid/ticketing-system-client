@@ -1,22 +1,11 @@
 import { useState, useEffect, useCallback } from 'react';
-import type { Ticket, TicketFilterStatus, PagedResponse } from '../types/ticket';
+import type { Ticket, PagedResponse } from '../types/ticket';
 import { TicketList } from '../components/TicketList';
-import { apiClient } from '../services/api';
+import { ticketApi } from '../services/api';
 import { useAuth } from '../context/AuthContext';
-
-interface TabConfig {
-  label: string;
-  status: TicketFilterStatus;
-}
-
-const TABS: TabConfig[] = [
-  { label: 'Pending', status: 'PENDING' },
-  { label: 'Resolved', status: 'RESOLVED' },
-];
 
 export function Home() {
   const { user } = useAuth();
-  const [activeTab, setActiveTab] = useState<TicketFilterStatus>('PENDING');
   const [tickets, setTickets] = useState<Ticket[]>([]);
   const [pageInfo, setPageInfo] = useState<Omit<PagedResponse<Ticket>, 'content'>>({
     totalElements: 0,
@@ -29,15 +18,22 @@ export function Home() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const fetchTickets = useCallback(async (status: TicketFilterStatus, page: number) => {
+  const fetchTickets = useCallback(async (page: number, currentFilters?: any) => {
     if (!user) return;
     setLoading(true);
     setError(null);
     try {
-      const result = await apiClient<{ data: PagedResponse<Ticket> }>(
-        `/api/tickets/user/${user.userId}?status=${status}&page=${page}&size=10`,
-      );
-      const paged = result.data;
+      const paged = await ticketApi.findMyTickets({
+        page,
+        size: 10,
+        categoryId: currentFilters?.categoryId !== 'all' ? currentFilters?.categoryId : undefined,
+        priority: currentFilters?.priority !== 'all' ? currentFilters?.priority?.toUpperCase() : undefined,
+        status: currentFilters?.status !== 'all' ? currentFilters?.status?.toUpperCase() : undefined,
+        assignedTo: currentFilters?.assignedTo || undefined,
+        createdBy: currentFilters?.issuer || undefined,
+        startDate: currentFilters?.startDate || undefined,
+        endDate: currentFilters?.endDate || undefined,
+      });
       setTickets(paged.content ?? []);
       setPageInfo({
         totalElements: paged.totalElements,
@@ -54,17 +50,13 @@ export function Home() {
     }
   }, [user]);
 
-  // Re-fetch whenever tab changes (reset to page 0)
+  // Initial fetch
   useEffect(() => {
-    fetchTickets(activeTab, 0);
-  }, [activeTab, fetchTickets]);
+    fetchTickets(0);
+  }, [fetchTickets]);
 
-  const handleTabChange = (status: TicketFilterStatus) => {
-    setActiveTab(status);
-  };
-
-  const handlePageChange = (page: number) => {
-    fetchTickets(activeTab, page);
+  const handlePageChange = (page: number, filters?: any) => {
+    fetchTickets(page, filters);
   };
 
   const handleDelete = (id: string) => {
@@ -73,25 +65,6 @@ export function Home() {
 
   return (
     <div className="w-full space-y-0">
-      {/* Tab Bar */}
-      <div className="flex gap-1 border-b border-gray-200 mb-6">
-        {TABS.map((tab) => {
-          const isActive = activeTab === tab.status;
-          return (
-            <button
-              key={tab.status}
-              onClick={() => handleTabChange(tab.status)}
-              className={`px-6 py-3 text-sm font-semibold rounded-t-lg transition-all duration-150 focus:outline-none ${isActive
-                ? 'bg-[#2D336B] text-white border border-b-0 border-[#2D336B]'
-                : 'text-gray-500 hover:text-[#2D336B] hover:bg-gray-50 border border-transparent'
-                }`}
-            >
-              {tab.label}
-            </button>
-          );
-        })}
-      </div>
-
       {/* Content */}
       {loading && (
         <div className="p-12 text-center text-gray-400 font-medium">
@@ -101,8 +74,8 @@ export function Home() {
       )}
 
       {error && (
-        <div className="p-8 text-center text-red-500 font-medium bg-red-50 rounded-lg border border-red-100">
-          ⚠️ {error}
+        <div className="bg-red-50 text-red-600 p-4 rounded-lg mb-6 text-sm font-medium">
+          {error}
         </div>
       )}
 
