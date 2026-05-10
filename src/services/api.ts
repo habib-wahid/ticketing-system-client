@@ -148,7 +148,7 @@ export const authApi = {
 
 // ── Category API calls ────────────────────────────────────────
 
-import type { PagedResponse } from '../types/ticket';
+import type { PagedResponse, Ticket } from '../types/ticket';
 import type {
   ComplaintCategoryResponse,
   ComplaintCategoryCreateRequest,
@@ -210,6 +210,30 @@ export const categoryApi = {
 export const userApi = {
   async search(query: string): Promise<AuthUser[]> {
     const json = await apiClient<ApiResponse<AuthUser[]>>(`/api/users/search?name=${encodeURIComponent(query)}`);
+    return json.data;
+  },
+};
+
+export const ticketApi = {
+  async findMyTickets(params: {
+    page?: number;
+    size?: number;
+    categoryId?: string;
+    priority?: string;
+    status?: string;
+    createdBy?: string;
+    assignedTo?: string;
+    startDate?: string;
+    endDate?: string;
+  }): Promise<PagedResponse<Ticket>> {
+    const searchParams = new URLSearchParams();
+    Object.entries(params).forEach(([key, value]) => {
+      if (value !== undefined && value !== null && value !== '') {
+        searchParams.append(key, value.toString());
+      }
+    });
+
+    const json = await apiClient<ApiResponse<PagedResponse<Ticket>>>(`/api/tickets/user?${searchParams.toString()}`);
     return json.data;
   },
 };

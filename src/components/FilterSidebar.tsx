@@ -10,6 +10,7 @@ interface FilterSidebarProps {
   filters: {
     priority: string;
     category: string;
+    categoryId: string;
     status: string;
     flag: string;
     issuer: string;
@@ -19,20 +20,23 @@ interface FilterSidebarProps {
     startDate: string;
     endDate: string;
   };
-  setFilters: (filters: any) => void;
+  onApply: (filters: any) => void;
+  onReset: () => void;
 }
 
 export const FilterSidebar: React.FC<FilterSidebarProps> = ({
   isOpen,
   onClose,
-  filters,
-  setFilters,
+  filters: initialFilters,
+  onApply,
+  onReset,
 }) => {
   const [categories, setCategories] = useState<ComplaintCategoryResponse[]>([]);
-  
+  const [localFilters, setLocalFilters] = useState(initialFilters);
+
   // User Search State
-  const [issuerSearch, setIssuerSearch] = useState(filters.issuerName || '');
-  const [assignedSearch, setAssignedSearch] = useState(filters.assignedToName || '');
+  const [issuerSearch, setIssuerSearch] = useState(initialFilters.issuerName || '');
+  const [assignedSearch, setAssignedSearch] = useState(initialFilters.assignedToName || '');
   const [issuerResults, setIssuerResults] = useState<AuthUser[]>([]);
   const [assignedResults, setAssignedResults] = useState<AuthUser[]>([]);
   const [isSearchingIssuer, setIsSearchingIssuer] = useState(false);
@@ -42,6 +46,15 @@ export const FilterSidebar: React.FC<FilterSidebarProps> = ({
 
   const issuerRef = useRef<HTMLDivElement>(null);
   const assignedRef = useRef<HTMLDivElement>(null);
+
+  // Sync local filters when sidebar opens with new initial filters
+  useEffect(() => {
+    if (isOpen) {
+      setLocalFilters(initialFilters);
+      setIssuerSearch(initialFilters.issuerName || '');
+      setAssignedSearch(initialFilters.assignedToName || '');
+    }
+  }, [isOpen, initialFilters]);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -73,7 +86,7 @@ export const FilterSidebar: React.FC<FilterSidebarProps> = ({
 
   // Debounced User Search for Issuer
   useEffect(() => {
-    if (!issuerSearch || issuerSearch === filters.issuerName) {
+    if (!issuerSearch || issuerSearch === localFilters.issuerName) {
       setIssuerResults([]);
       return;
     }
@@ -92,11 +105,11 @@ export const FilterSidebar: React.FC<FilterSidebarProps> = ({
     }, 500);
 
     return () => clearTimeout(timer);
-  }, [issuerSearch, filters.issuerName]);
+  }, [issuerSearch, localFilters.issuerName]);
 
   // Debounced User Search for Assigned To
   useEffect(() => {
-    if (!assignedSearch || assignedSearch === filters.assignedToName) {
+    if (!assignedSearch || assignedSearch === localFilters.assignedToName) {
       setAssignedResults([]);
       return;
     }
@@ -115,16 +128,17 @@ export const FilterSidebar: React.FC<FilterSidebarProps> = ({
     }, 500);
 
     return () => clearTimeout(timer);
-  }, [assignedSearch, filters.assignedToName]);
+  }, [assignedSearch, localFilters.assignedToName]);
 
   if (!isOpen) return null;
 
   const handleReset = () => {
     setIssuerSearch('');
     setAssignedSearch('');
-    setFilters({
+    const resetFilters = {
       priority: 'all',
       category: 'all',
+      categoryId: 'all',
       status: 'all',
       flag: 'all',
       issuer: '',
@@ -133,18 +147,20 @@ export const FilterSidebar: React.FC<FilterSidebarProps> = ({
       assignedToName: '',
       startDate: '',
       endDate: '',
-    });
+    };
+    setLocalFilters(resetFilters);
+    onReset();
   };
 
   const updateFilter = (key: string, value: string) => {
-    setFilters((prev: any) => ({ ...prev, [key]: value }));
+    setLocalFilters((prev: any) => ({ ...prev, [key]: value }));
   };
 
   const selectUser = (type: 'issuer' | 'assignedTo', user: AuthUser) => {
     const fullName = `${user.firstName} ${user.lastName}`;
     if (type === 'issuer') {
       setIssuerSearch(fullName);
-      setFilters((prev: any) => ({ 
+      setLocalFilters((prev: any) => ({ 
         ...prev, 
         issuer: user.userId, 
         issuerName: fullName 
@@ -152,13 +168,18 @@ export const FilterSidebar: React.FC<FilterSidebarProps> = ({
       setShowIssuerDropdown(false);
     } else {
       setAssignedSearch(fullName);
-      setFilters((prev: any) => ({ 
+      setLocalFilters((prev: any) => ({ 
         ...prev, 
         assignedTo: user.userId, 
         assignedToName: fullName 
       }));
       setShowAssignedDropdown(false);
     }
+  };
+
+  const handleApply = () => {
+    onApply(localFilters);
+    onClose();
   };
 
   return (
@@ -193,13 +214,13 @@ export const FilterSidebar: React.FC<FilterSidebarProps> = ({
               Complaint Category
             </label>
             <select
-              value={filters.category}
-              onChange={(e) => updateFilter('category', e.target.value)}
+              value={localFilters.categoryId}
+              onChange={(e) => updateFilter('categoryId', e.target.value)}
               className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#433878]/20 focus:border-[#433878] transition-all cursor-pointer"
             >
               <option value="all">All Categories</option>
               {categories.map((cat) => (
-                <option key={cat.id} value={cat.name}>
+                <option key={cat.id} value={cat.id}>
                   {cat.name}
                 </option>
               ))}
@@ -212,7 +233,7 @@ export const FilterSidebar: React.FC<FilterSidebarProps> = ({
               Priority
             </label>
             <select
-              value={filters.priority}
+              value={localFilters.priority}
               onChange={(e) => updateFilter('priority', e.target.value)}
               className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#433878]/20 focus:border-[#433878] transition-all cursor-pointer"
             >
@@ -230,7 +251,7 @@ export const FilterSidebar: React.FC<FilterSidebarProps> = ({
               Status
             </label>
             <select
-              value={filters.status}
+              value={localFilters.status}
               onChange={(e) => updateFilter('status', e.target.value)}
               className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#433878]/20 focus:border-[#433878] transition-all cursor-pointer"
             >
@@ -254,7 +275,7 @@ export const FilterSidebar: React.FC<FilterSidebarProps> = ({
                     type="radio"
                     name="flag"
                     value={value}
-                    checked={filters.flag === value}
+                    checked={localFilters.flag === value}
                     onChange={(e) => updateFilter('flag', e.target.value)}
                     className="w-4 h-4 text-[#433878] border-gray-300 focus:ring-[#433878] cursor-pointer"
                   />
@@ -305,7 +326,7 @@ export const FilterSidebar: React.FC<FilterSidebarProps> = ({
                 </div>
               )}
             </div>
-            {filters.issuer && (
+            {localFilters.issuer && (
               <button 
                 onClick={() => {
                   setIssuerSearch('');
@@ -358,7 +379,7 @@ export const FilterSidebar: React.FC<FilterSidebarProps> = ({
                 </div>
               )}
             </div>
-            {filters.assignedTo && (
+            {localFilters.assignedTo && (
               <button 
                 onClick={() => {
                   setAssignedSearch('');
@@ -382,7 +403,7 @@ export const FilterSidebar: React.FC<FilterSidebarProps> = ({
                 <Calendar size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
                 <input
                   type="date"
-                  value={filters.startDate}
+                  value={localFilters.startDate}
                   onChange={(e) => updateFilter('startDate', e.target.value)}
                   className="w-full pl-9 pr-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-xs focus:outline-none focus:ring-2 focus:ring-[#433878]/20 focus:border-[#433878] transition-all"
                 />
@@ -391,7 +412,7 @@ export const FilterSidebar: React.FC<FilterSidebarProps> = ({
                 <Calendar size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
                 <input
                   type="date"
-                  value={filters.endDate}
+                  value={localFilters.endDate}
                   onChange={(e) => updateFilter('endDate', e.target.value)}
                   className="w-full pl-9 pr-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-xs focus:outline-none focus:ring-2 focus:ring-[#433878]/20 focus:border-[#433878] transition-all"
                 />
@@ -409,7 +430,7 @@ export const FilterSidebar: React.FC<FilterSidebarProps> = ({
             Reset All
           </button>
           <button
-            onClick={onClose}
+            onClick={handleApply}
             className="flex-1 px-4 py-3 bg-[#433878] hover:bg-[#3a2d66] text-white rounded-xl text-sm font-bold transition-all shadow-lg hover:shadow-xl active:scale-95"
           >
             Apply Filters

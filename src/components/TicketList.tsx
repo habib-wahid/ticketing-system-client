@@ -18,7 +18,7 @@ interface TicketListProps {
   tickets: Ticket[];
   onDelete: (id: string) => void;
   pageInfo: Omit<PagedResponse<Ticket>, 'content'>;
-  onPageChange: (page: number) => void;
+  onPageChange: (page: number, filters?: any) => void;
   hideManageActions?: boolean;
 }
 
@@ -34,6 +34,7 @@ export const TicketList: React.FC<TicketListProps> = ({
   const [filters, setFilters] = useState({
     priority: 'all',
     category: 'all',
+    categoryId: '',
     status: 'all',
     flag: 'all',
     issuer: '',
@@ -57,6 +58,29 @@ export const TicketList: React.FC<TicketListProps> = ({
     filters.startDate !== '' || 
     filters.endDate !== '';
 
+  const handleFilterApply = (newFilters: any) => {
+    setFilters(newFilters);
+    onPageChange(0, newFilters);
+  };
+
+  const handleFilterReset = () => {
+    const resetFilters = {
+      priority: 'all',
+      category: 'all',
+      categoryId: 'all',
+      status: 'all',
+      flag: 'all',
+      issuer: '',
+      issuerName: '',
+      assignedTo: '',
+      assignedToName: '',
+      startDate: '',
+      endDate: '',
+    };
+    setFilters(resetFilters);
+    onPageChange(0, resetFilters);
+  };
+
   const handleSelectAll = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.checked) {
       setSelectedIds(tickets.map((t) => t.ticketId));
@@ -79,6 +103,10 @@ export const TicketList: React.FC<TicketListProps> = ({
     const start = Math.max(0, currentPage - 2);
     const end = Math.min(totalPages - 1, currentPage + 2);
     return Array.from({ length: end - start + 1 }, (_, i) => start + i);
+  };
+
+  const handlePageChange = (page: number) => {
+    onPageChange(page, filters);
   };
 
   if (tickets.length === 0) {
@@ -154,35 +182,14 @@ export const TicketList: React.FC<TicketListProps> = ({
             )}
           </button>
         </div>
-
-        {!hideManageActions && (
-          <>
-            <div className="bg-white border border-gray-100 rounded-lg px-4 py-2 flex items-center gap-2 md:ml-auto">
-              <input
-                type="checkbox"
-                checked={true}
-                readOnly
-                className="w-4 h-4 rounded border-gray-300 text-[#433878] focus:ring-[#433878]"
-              />
-              <span className="text-xs font-medium text-gray-700 whitespace-nowrap">Active</span>
-            </div>
-
-            <button className="bg-[#F59E0B] hover:bg-[#D97706] text-white px-6 py-2 rounded-lg font-bold text-sm transition-colors shadow-sm whitespace-nowrap">
-              Edit
-            </button>
-
-            <button className="bg-[#EF4444] hover:bg-[#DC2626] text-white px-6 py-2 rounded-lg font-bold text-sm transition-colors shadow-sm whitespace-nowrap">
-              Delete
-            </button>
-          </>
-        )}
       </div>
 
       <FilterSidebar
         isOpen={isFilterOpen}
         onClose={() => setIsFilterOpen(false)}
         filters={filters}
-        setFilters={setFilters}
+        onApply={handleFilterApply}
+        onReset={handleFilterReset}
       />
 
       {/* Table Container */}
@@ -238,7 +245,7 @@ export const TicketList: React.FC<TicketListProps> = ({
 
           <div className="flex items-center gap-2">
             <button
-              onClick={() => onPageChange(0)}
+              onClick={() => handlePageChange(0)}
               disabled={first}
               className="p-2 text-gray-400 hover:text-[#433878] transition-colors rounded-lg hover:bg-gray-50 disabled:opacity-30 disabled:cursor-not-allowed"
               title="First page"
@@ -246,7 +253,7 @@ export const TicketList: React.FC<TicketListProps> = ({
               <ChevronsLeft size={20} />
             </button>
             <button
-              onClick={() => onPageChange(currentPage - 1)}
+              onClick={() => handlePageChange(currentPage - 1)}
               disabled={first}
               className="p-2 text-gray-400 hover:text-[#433878] transition-colors rounded-lg hover:bg-gray-50 disabled:opacity-30 disabled:cursor-not-allowed"
               title="Previous page"
@@ -258,7 +265,7 @@ export const TicketList: React.FC<TicketListProps> = ({
               {getPageNumbers().map((pageNum) => (
                 <button
                   key={pageNum}
-                  onClick={() => onPageChange(pageNum)}
+                  onClick={() => handlePageChange(pageNum)}
                   className={`w-8 h-8 rounded-lg flex items-center justify-center text-sm font-bold transition-colors ${pageNum === currentPage
                     ? 'bg-[#10B981] text-white'
                     : 'text-gray-400 hover:bg-gray-50'
@@ -270,7 +277,7 @@ export const TicketList: React.FC<TicketListProps> = ({
             </div>
 
             <button
-              onClick={() => onPageChange(currentPage + 1)}
+              onClick={() => handlePageChange(currentPage + 1)}
               disabled={last}
               className="p-2 text-gray-400 hover:text-[#433878] transition-colors rounded-lg hover:bg-gray-50 disabled:opacity-30 disabled:cursor-not-allowed"
               title="Next page"
@@ -278,7 +285,7 @@ export const TicketList: React.FC<TicketListProps> = ({
               <ChevronRight size={20} />
             </button>
             <button
-              onClick={() => onPageChange(totalPages - 1)}
+              onClick={() => handlePageChange(totalPages - 1)}
               disabled={last}
               className="p-2 text-gray-400 hover:text-[#433878] transition-colors rounded-lg hover:bg-gray-50 disabled:opacity-30 disabled:cursor-not-allowed"
               title="Last page"
