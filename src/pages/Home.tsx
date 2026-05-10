@@ -112,6 +112,7 @@ export function Home() {
           onDelete={handleDelete}
           pageInfo={pageInfo}
           onPageChange={handlePageChange}
+          hideManageActions={true}
         />
       )}
     </div>

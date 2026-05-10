@@ -7,9 +7,12 @@ import {
   ChevronsLeft,
   ChevronsRight,
   Plus,
+  Search,
+  SlidersHorizontal,
 } from 'lucide-react';
 import type { Ticket, PagedResponse } from '../types/ticket';
 import { TicketItem } from './TicketItem';
+import { FilterSidebar } from './FilterSidebar';
 
 interface TicketListProps {
   tickets: Ticket[];
@@ -27,8 +30,30 @@ export const TicketList: React.FC<TicketListProps> = ({
   hideManageActions = false,
 }) => {
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [filters, setFilters] = useState({
+    priority: 'all',
+    category: 'all',
+    status: 'all',
+    flag: 'all',
+    issuer: '',
+    assignedTo: '',
+    startDate: '',
+    endDate: '',
+  });
+  const [isFilterOpen, setIsFilterOpen] = useState(false);
 
   const { number: currentPage, totalPages, totalElements, first, last } = pageInfo;
+
+  const hasActiveFilters = 
+    filters.priority !== 'all' || 
+    filters.category !== 'all' || 
+    filters.status !== 'all' || 
+    filters.flag !== 'all' || 
+    filters.issuer !== '' || 
+    filters.assignedTo !== '' || 
+    filters.startDate !== '' || 
+    filters.endDate !== '';
 
   const handleSelectAll = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.checked) {
@@ -73,50 +98,92 @@ export const TicketList: React.FC<TicketListProps> = ({
 
   return (
     <div className="space-y-6">
-      {/* Top Action Bar */}
-      <div className="flex flex-wrap gap-4 items-center">
-        {!hideManageActions && (
-          <Link
-            to="/new"
-            className="bg-[#10B981] hover:bg-[#059669] text-white px-6 py-3 rounded-lg font-bold flex items-center gap-2 transition-colors shadow-sm"
-          >
-            <Plus size={20} />
-            New Ticket
-          </Link>
-        )}
+      {/* Top Action Bar with Search and Filters */}
+      <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+        {/* Left Side: New Ticket Button */}
+        <div className="flex items-center gap-4">
+          {!hideManageActions && (
+            <Link
+              to="/new"
+              className="bg-[#10B981] hover:bg-[#059669] text-white px-6 py-3 rounded-lg font-bold flex items-center gap-2 transition-colors shadow-sm whitespace-nowrap"
+            >
+              <Plus size={20} />
+              New Ticket
+            </Link>
+          )}
 
-        <div className="bg-white border border-gray-100 rounded-lg px-6 py-2 flex items-center gap-4 shadow-sm">
-          <div className="p-2 bg-gray-50 rounded-full">
-            <TicketIcon size={20} className="text-gray-400" />
+          {/* Total Tickets Card */}
+          <div className="bg-gray-50 border border-gray-200 rounded-lg px-4 py-3 flex items-center gap-3 whitespace-nowrap">
+            <div className="p-2 bg-white rounded-full">
+              <TicketIcon size={18} className="text-gray-400" />
+            </div>
+            <div>
+              <div className="text-[9px] text-gray-400 font-medium uppercase tracking-wider">Total</div>
+              <div className="text-sm font-bold text-gray-900">{totalElements.toLocaleString()} Tickets</div>
+            </div>
           </div>
-          <div>
-            <div className="text-[10px] text-gray-400 font-medium uppercase tracking-wider">Total Tickets</div>
-            <div className="text-lg font-bold text-gray-900">{totalElements.toLocaleString()} Tickets</div>
+        </div>
+
+        {/* Right Side: Search and Filters */}
+        <div className="flex flex-col gap-3 md:flex-row md:items-center md:gap-3 flex-1 md:flex-none md:ml-auto">
+          {/* Search Bar */}
+          <div className="flex-1 md:flex-none md:w-48 lg:w-64">
+            <div className="relative">
+              <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+              <input
+                type="text"
+                placeholder="Search..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="w-full pl-9 pr-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#433878]/20 focus:border-[#433878] transition-all placeholder-gray-400"
+              />
+            </div>
           </div>
+
+          {/* Filter Button */}
+          <button
+            onClick={() => setIsFilterOpen(!isFilterOpen)}
+            className="px-3 py-2 border border-gray-200 rounded-lg text-sm font-medium text-gray-600 hover:bg-gray-50 hover:border-gray-300 transition-all flex items-center gap-2 whitespace-nowrap relative"
+          >
+            <SlidersHorizontal size={14} />
+            Filter
+            {hasActiveFilters && (
+              <span className="ml-1 w-2 h-2 bg-[#433878] rounded-full"></span>
+            )}
+          </button>
         </div>
 
         {!hideManageActions && (
           <>
-            <div className="bg-white border border-gray-100 rounded-lg px-6 py-2 flex items-center gap-3 shadow-sm ml-auto">
+            <div className="bg-white border border-gray-100 rounded-lg px-4 py-2 flex items-center gap-2 md:ml-auto">
               <input
                 type="checkbox"
                 checked={true}
                 readOnly
-                className="w-5 h-5 rounded border-gray-300 text-[#433878] focus:ring-[#433878]"
+                className="w-4 h-4 rounded border-gray-300 text-[#433878] focus:ring-[#433878]"
               />
-              <span className="text-sm font-medium text-gray-700">Active</span>
+              <span className="text-xs font-medium text-gray-700 whitespace-nowrap">Active</span>
             </div>
 
-            <button className="bg-[#F59E0B] hover:bg-[#D97706] text-white px-8 py-3 rounded-lg font-bold transition-colors shadow-sm">
+            <button className="bg-[#F59E0B] hover:bg-[#D97706] text-white px-6 py-2 rounded-lg font-bold text-sm transition-colors shadow-sm whitespace-nowrap">
               Edit
             </button>
 
-            <button className="bg-[#EF4444] hover:bg-[#DC2626] text-white px-8 py-3 rounded-lg font-bold transition-colors shadow-sm">
+            <button className="bg-[#EF4444] hover:bg-[#DC2626] text-white px-6 py-2 rounded-lg font-bold text-sm transition-colors shadow-sm whitespace-nowrap">
               Delete
             </button>
           </>
         )}
       </div>
+
+      <FilterSidebar
+        isOpen={isFilterOpen}
+        onClose={() => setIsFilterOpen(false)}
+        filters={filters}
+        setFilters={setFilters}
+      />
+
+      {/* Table Container */}
 
       {/* Table Container */}
       <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
