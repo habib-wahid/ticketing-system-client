@@ -37,7 +37,9 @@ export const TicketList: React.FC<TicketListProps> = ({
     status: 'all',
     flag: 'all',
     issuer: '',
+    issuerName: '',
     assignedTo: '',
+    assignedToName: '',
     startDate: '',
     endDate: '',
   });

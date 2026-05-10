@@ -1,5 +1,8 @@
-import React from 'react';
-import { SlidersHorizontal, X, User as UserIcon, Calendar } from 'lucide-react';
+import React, { useEffect, useState, useRef } from 'react';
+import { SlidersHorizontal, X, User as UserIcon, Calendar, Loader2 } from 'lucide-react';
+import { categoryApi, userApi } from '../services/api';
+import type { ComplaintCategoryResponse } from '../types/category';
+import type { AuthUser } from '../types/auth';
 
 interface FilterSidebarProps {
   isOpen: boolean;
@@ -10,7 +13,9 @@ interface FilterSidebarProps {
     status: string;
     flag: string;
     issuer: string;
+    issuerName?: string;
     assignedTo: string;
+    assignedToName?: string;
     startDate: string;
     endDate: string;
   };
@@ -23,16 +28,109 @@ export const FilterSidebar: React.FC<FilterSidebarProps> = ({
   filters,
   setFilters,
 }) => {
+  const [categories, setCategories] = useState<ComplaintCategoryResponse[]>([]);
+  
+  // User Search State
+  const [issuerSearch, setIssuerSearch] = useState(filters.issuerName || '');
+  const [assignedSearch, setAssignedSearch] = useState(filters.assignedToName || '');
+  const [issuerResults, setIssuerResults] = useState<AuthUser[]>([]);
+  const [assignedResults, setAssignedResults] = useState<AuthUser[]>([]);
+  const [isSearchingIssuer, setIsSearchingIssuer] = useState(false);
+  const [isSearchingAssigned, setIsSearchingAssigned] = useState(false);
+  const [showIssuerDropdown, setShowIssuerDropdown] = useState(false);
+  const [showAssignedDropdown, setShowAssignedDropdown] = useState(false);
+
+  const issuerRef = useRef<HTMLDivElement>(null);
+  const assignedRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (issuerRef.current && !issuerRef.current.contains(event.target as Node)) {
+        setShowIssuerDropdown(false);
+      }
+      if (assignedRef.current && !assignedRef.current.contains(event.target as Node)) {
+        setShowAssignedDropdown(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  useEffect(() => {
+    const fetchCategories = async () => {
+      try {
+        const response = await categoryApi.findAll(0, 100);
+        setCategories(response.content);
+      } catch (error) {
+        console.error('Failed to fetch categories:', error);
+      }
+    };
+
+    if (isOpen) {
+      fetchCategories();
+    }
+  }, [isOpen]);
+
+  // Debounced User Search for Issuer
+  useEffect(() => {
+    if (!issuerSearch || issuerSearch === filters.issuerName) {
+      setIssuerResults([]);
+      return;
+    }
+
+    const timer = setTimeout(async () => {
+      setIsSearchingIssuer(true);
+      try {
+        const results = await userApi.search(issuerSearch);
+        setIssuerResults(results);
+        setShowIssuerDropdown(true);
+      } catch (error) {
+        console.error('Failed to search users:', error);
+      } finally {
+        setIsSearchingIssuer(false);
+      }
+    }, 500);
+
+    return () => clearTimeout(timer);
+  }, [issuerSearch, filters.issuerName]);
+
+  // Debounced User Search for Assigned To
+  useEffect(() => {
+    if (!assignedSearch || assignedSearch === filters.assignedToName) {
+      setAssignedResults([]);
+      return;
+    }
+
+    const timer = setTimeout(async () => {
+      setIsSearchingAssigned(true);
+      try {
+        const results = await userApi.search(assignedSearch);
+        setAssignedResults(results);
+        setShowAssignedDropdown(true);
+      } catch (error) {
+        console.error('Failed to search users:', error);
+      } finally {
+        setIsSearchingAssigned(false);
+      }
+    }, 500);
+
+    return () => clearTimeout(timer);
+  }, [assignedSearch, filters.assignedToName]);
+
   if (!isOpen) return null;
 
   const handleReset = () => {
+    setIssuerSearch('');
+    setAssignedSearch('');
     setFilters({
       priority: 'all',
       category: 'all',
       status: 'all',
       flag: 'all',
       issuer: '',
+      issuerName: '',
       assignedTo: '',
+      assignedToName: '',
       startDate: '',
       endDate: '',
     });
@@ -40,6 +138,27 @@ export const FilterSidebar: React.FC<FilterSidebarProps> = ({
 
   const updateFilter = (key: string, value: string) => {
     setFilters((prev: any) => ({ ...prev, [key]: value }));
+  };
+
+  const selectUser = (type: 'issuer' | 'assignedTo', user: AuthUser) => {
+    const fullName = `${user.firstName} ${user.lastName}`;
+    if (type === 'issuer') {
+      setIssuerSearch(fullName);
+      setFilters((prev: any) => ({ 
+        ...prev, 
+        issuer: user.userId, 
+        issuerName: fullName 
+      }));
+      setShowIssuerDropdown(false);
+    } else {
+      setAssignedSearch(fullName);
+      setFilters((prev: any) => ({ 
+        ...prev, 
+        assignedTo: user.userId, 
+        assignedToName: fullName 
+      }));
+      setShowAssignedDropdown(false);
+    }
   };
 
   return (
@@ -79,10 +198,11 @@ export const FilterSidebar: React.FC<FilterSidebarProps> = ({
               className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#433878]/20 focus:border-[#433878] transition-all cursor-pointer"
             >
               <option value="all">All Categories</option>
-              <option value="technical">Technical</option>
-              <option value="billing">Billing</option>
-              <option value="general">General</option>
-              <option value="feature">Feature Request</option>
+              {categories.map((cat) => (
+                <option key={cat.id} value={cat.name}>
+                  {cat.name}
+                </option>
+              ))}
             </select>
           </div>
 
@@ -91,21 +211,17 @@ export const FilterSidebar: React.FC<FilterSidebarProps> = ({
             <label className="block text-sm font-bold text-gray-700 mb-3">
               Priority
             </label>
-            <div className="grid grid-cols-2 gap-3">
-              {['all', 'low', 'medium', 'high', 'critical'].map((value) => (
-                <button
-                  key={value}
-                  onClick={() => updateFilter('priority', value)}
-                  className={`px-4 py-2 rounded-lg text-sm font-medium border transition-all capitalize ${
-                    filters.priority === value
-                      ? 'bg-[#433878] border-[#433878] text-white'
-                      : 'bg-white border-gray-200 text-gray-600 hover:border-[#433878]/50'
-                  }`}
-                >
-                  {value === 'all' ? 'All' : value}
-                </button>
-              ))}
-            </div>
+            <select
+              value={filters.priority}
+              onChange={(e) => updateFilter('priority', e.target.value)}
+              className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#433878]/20 focus:border-[#433878] transition-all cursor-pointer"
+            >
+              <option value="all">All Priorities</option>
+              <option value="low">Low</option>
+              <option value="medium">Medium</option>
+              <option value="high">High</option>
+              <option value="critical">Critical</option>
+            </select>
           </div>
 
           {/* Status */}
@@ -113,21 +229,17 @@ export const FilterSidebar: React.FC<FilterSidebarProps> = ({
             <label className="block text-sm font-bold text-gray-700 mb-3">
               Status
             </label>
-            <div className="flex flex-wrap gap-2">
-              {['all', 'pending', 'in_process', 'resolved', 'closed'].map((value) => (
-                <button
-                  key={value}
-                  onClick={() => updateFilter('status', value)}
-                  className={`px-3 py-1.5 rounded-full text-xs font-bold border transition-all uppercase tracking-wider ${
-                    filters.status === value
-                      ? 'bg-[#433878] border-[#433878] text-white shadow-sm'
-                      : 'bg-white border-gray-200 text-gray-500 hover:bg-gray-50'
-                  }`}
-                >
-                  {value.replace('_', ' ')}
-                </button>
-              ))}
-            </div>
+            <select
+              value={filters.status}
+              onChange={(e) => updateFilter('status', e.target.value)}
+              className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#433878]/20 focus:border-[#433878] transition-all cursor-pointer"
+            >
+              <option value="all">All Statuses</option>
+              <option value="pending">Pending</option>
+              <option value="in_process">In Process</option>
+              <option value="resolved">Resolved</option>
+              <option value="closed">Closed</option>
+            </select>
           </div>
 
           {/* Flag */}
@@ -155,7 +267,7 @@ export const FilterSidebar: React.FC<FilterSidebarProps> = ({
           </div>
 
           {/* Issuer (Searchable) */}
-          <div>
+          <div ref={issuerRef}>
             <label className="block text-sm font-bold text-gray-700 mb-3">
               Issuer
             </label>
@@ -164,15 +276,51 @@ export const FilterSidebar: React.FC<FilterSidebarProps> = ({
               <input
                 type="text"
                 placeholder="Search issuer..."
-                value={filters.issuer}
-                onChange={(e) => updateFilter('issuer', e.target.value)}
-                className="w-full pl-10 pr-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#433878]/20 focus:border-[#433878] transition-all"
+                value={issuerSearch}
+                onChange={(e) => setIssuerSearch(e.target.value)}
+                onFocus={() => issuerResults.length > 0 && setShowIssuerDropdown(true)}
+                className="w-full pl-10 pr-10 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#433878]/20 focus:border-[#433878] transition-all"
               />
+              {isSearchingIssuer && (
+                <Loader2 size={16} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 animate-spin" />
+              )}
+              
+              {showIssuerDropdown && issuerResults.length > 0 && (
+                <div className="absolute z-10 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-60 overflow-y-auto">
+                  {issuerResults.map((user) => (
+                    <button
+                      key={user.userId}
+                      onClick={() => selectUser('issuer', user)}
+                      className="w-full text-left px-4 py-2 hover:bg-gray-50 text-sm flex items-center gap-3 transition-colors border-b last:border-0 border-gray-50"
+                    >
+                      <div className="w-8 h-8 rounded-full bg-[#433878]/10 text-[#433878] flex items-center justify-center text-xs font-bold uppercase">
+                        {user.firstName[0]}{user.lastName[0]}
+                      </div>
+                      <div>
+                        <div className="font-medium text-gray-900">{user.firstName} {user.lastName}</div>
+                        <div className="text-xs text-gray-500">{user.email}</div>
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              )}
             </div>
+            {filters.issuer && (
+              <button 
+                onClick={() => {
+                  setIssuerSearch('');
+                  updateFilter('issuer', '');
+                  updateFilter('issuerName', '');
+                }}
+                className="mt-2 text-xs text-red-500 hover:text-red-600 font-medium"
+              >
+                Clear Selection
+              </button>
+            )}
           </div>
 
           {/* Assigned To (Searchable) */}
-          <div>
+          <div ref={assignedRef}>
             <label className="block text-sm font-bold text-gray-700 mb-3">
               Assigned To
             </label>
@@ -181,11 +329,47 @@ export const FilterSidebar: React.FC<FilterSidebarProps> = ({
               <input
                 type="text"
                 placeholder="Search employee..."
-                value={filters.assignedTo}
-                onChange={(e) => updateFilter('assignedTo', e.target.value)}
-                className="w-full pl-10 pr-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#433878]/20 focus:border-[#433878] transition-all"
+                value={assignedSearch}
+                onChange={(e) => setAssignedSearch(e.target.value)}
+                onFocus={() => assignedResults.length > 0 && setShowAssignedDropdown(true)}
+                className="w-full pl-10 pr-10 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#433878]/20 focus:border-[#433878] transition-all"
               />
+              {isSearchingAssigned && (
+                <Loader2 size={16} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 animate-spin" />
+              )}
+
+              {showAssignedDropdown && assignedResults.length > 0 && (
+                <div className="absolute z-10 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-60 overflow-y-auto">
+                  {assignedResults.map((user) => (
+                    <button
+                      key={user.userId}
+                      onClick={() => selectUser('assignedTo', user)}
+                      className="w-full text-left px-4 py-2 hover:bg-gray-50 text-sm flex items-center gap-3 transition-colors border-b last:border-0 border-gray-50"
+                    >
+                      <div className="w-8 h-8 rounded-full bg-[#433878]/10 text-[#433878] flex items-center justify-center text-xs font-bold uppercase">
+                        {user.firstName[0]}{user.lastName[0]}
+                      </div>
+                      <div>
+                        <div className="font-medium text-gray-900">{user.firstName} {user.lastName}</div>
+                        <div className="text-xs text-gray-500">{user.email}</div>
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              )}
             </div>
+            {filters.assignedTo && (
+              <button 
+                onClick={() => {
+                  setAssignedSearch('');
+                  updateFilter('assignedTo', '');
+                  updateFilter('assignedToName', '');
+                }}
+                className="mt-2 text-xs text-red-500 hover:text-red-600 font-medium"
+              >
+                Clear Selection
+              </button>
+            )}
           </div>
 
           {/* Date Range */}

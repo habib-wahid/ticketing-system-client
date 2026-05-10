@@ -1,4 +1,4 @@
-import type { AuthResponse, LoginRequest, RegisterRequest } from '../types/auth';
+import type { AuthResponse, AuthUser, LoginRequest, RegisterRequest } from '../types/auth';
 
 const BASE_URL = 'http://localhost:8080';
 
@@ -204,5 +204,12 @@ export const categoryApi = {
     await apiClient<ApiResponse<void>>(`/api/complaint-categories/${id}`, {
       method: 'DELETE',
     });
+  },
+};
+
+export const userApi = {
+  async search(query: string): Promise<AuthUser[]> {
+    const json = await apiClient<ApiResponse<AuthUser[]>>(`/api/users/search?name=${encodeURIComponent(query)}`);
+    return json.data;
   },
 };
