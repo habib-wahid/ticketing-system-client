@@ -47,15 +47,6 @@ export const FilterSidebar: React.FC<FilterSidebarProps> = ({
   const issuerRef = useRef<HTMLDivElement>(null);
   const assignedRef = useRef<HTMLDivElement>(null);
 
-  // Sync local filters when sidebar opens with new initial filters
-  useEffect(() => {
-    if (isOpen) {
-      setLocalFilters(initialFilters);
-      setIssuerSearch(initialFilters.issuerName || '');
-      setAssignedSearch(initialFilters.assignedToName || '');
-    }
-  }, [isOpen, initialFilters]);
-
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (issuerRef.current && !issuerRef.current.contains(event.target as Node)) {
@@ -256,10 +247,12 @@ export const FilterSidebar: React.FC<FilterSidebarProps> = ({
               className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#433878]/20 focus:border-[#433878] transition-all cursor-pointer"
             >
               <option value="all">All Statuses</option>
-              <option value="pending">Pending</option>
-              <option value="in_process">In Process</option>
-              <option value="resolved">Resolved</option>
-              <option value="closed">Closed</option>
+              <option value="NEW">New</option>
+              <option value="ASSIGNED">Assigned</option>
+              <option value="IN_PROGRESS">In Process</option>
+              <option value="RESOLVED">Resolved</option>
+              <option value="CLOSED">Closed</option>
+              <option value="REOPENED">Reopened</option>
             </select>
           </div>
 

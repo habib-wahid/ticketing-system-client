@@ -34,7 +34,7 @@ export const TicketList: React.FC<TicketListProps> = ({
   const [filters, setFilters] = useState({
     priority: 'all',
     category: 'all',
-    categoryId: '',
+    categoryId: 'all',
     status: 'all',
     flag: 'all',
     issuer: '',
@@ -47,16 +47,6 @@ export const TicketList: React.FC<TicketListProps> = ({
   const [isFilterOpen, setIsFilterOpen] = useState(false);
 
   const { number: currentPage, totalPages, totalElements, first, last } = pageInfo;
-
-  const hasActiveFilters = 
-    filters.priority !== 'all' || 
-    filters.category !== 'all' || 
-    filters.status !== 'all' || 
-    filters.flag !== 'all' || 
-    filters.issuer !== '' || 
-    filters.assignedTo !== '' || 
-    filters.startDate !== '' || 
-    filters.endDate !== '';
 
   const handleFilterApply = (newFilters: any) => {
     setFilters(newFilters);
@@ -109,23 +99,6 @@ export const TicketList: React.FC<TicketListProps> = ({
     onPageChange(page, filters);
   };
 
-  if (tickets.length === 0) {
-    return (
-      <div className="text-center py-16 bg-white rounded-lg border-2 border-dashed border-gray-200 shadow-sm">
-        <TicketIcon size={36} className="mx-auto text-gray-300 mb-3" />
-        <p className="text-gray-500 font-medium">No tickets found in this category.</p>
-        {!hideManageActions && (
-          <Link
-            to="/new"
-            className="mt-4 inline-flex items-center gap-2 text-sm text-[#10B981] hover:underline font-semibold"
-          >
-            <Plus size={16} /> Create a new ticket
-          </Link>
-        )}
-      </div>
-    );
-  }
-
   return (
     <div className="space-y-6">
       {/* Top Action Bar with Search and Filters */}
@@ -177,9 +150,6 @@ export const TicketList: React.FC<TicketListProps> = ({
           >
             <SlidersHorizontal size={14} />
             Filter
-            {hasActiveFilters && (
-              <span className="ml-1 w-2 h-2 bg-[#433878] rounded-full"></span>
-            )}
           </button>
         </div>
       </div>
@@ -192,109 +162,121 @@ export const TicketList: React.FC<TicketListProps> = ({
         onReset={handleFilterReset}
       />
 
-      {/* Table Container */}
-
-      {/* Table Container */}
-      <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="w-full text-left border-collapse">
-            <thead>
-              <tr className="bg-[#2D336B] text-white">
-                <th className="py-4 px-4 w-12">
-                  <input
-                    type="checkbox"
-                    onChange={handleSelectAll}
-                    checked={selectedIds.length === tickets.length && tickets.length > 0}
-                    className="w-4 h-4 rounded border-white/20 bg-white/10 text-white focus:ring-offset-0 focus:ring-0 cursor-pointer"
-                  />
-                </th>
-                <th className="py-4 px-4 text-sm font-semibold whitespace-nowrap">Ticket Id</th>
-                <th className="py-4 px-4 text-sm font-semibold whitespace-nowrap">Title</th>
-                <th className="py-4 px-4 text-sm font-semibold whitespace-nowrap">Category</th>
-                <th className="py-4 px-4 text-sm font-semibold whitespace-nowrap">Priority</th>
-                <th className="py-4 px-4 text-sm font-semibold whitespace-nowrap">Status</th>
-                <th className="py-4 px-4 text-sm font-semibold whitespace-nowrap">Assigned To</th>
-                <th className="py-4 px-4 text-sm font-semibold whitespace-nowrap">Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {tickets.map((ticket) => (
-                <TicketItem
-                  key={ticket.ticketId}
-                  ticket={ticket}
-                  onDelete={onDelete}
-                  isSelected={selectedIds.includes(ticket.ticketId)}
-                  onSelect={handleSelectOne}
-                />
-              ))}
-            </tbody>
-          </table>
+      {tickets.length === 0 ? (
+        <div className="text-center py-16 bg-white rounded-lg border-2 border-dashed border-gray-200 shadow-sm">
+          <TicketIcon size={36} className="mx-auto text-gray-300 mb-3" />
+          <p className="text-gray-500 font-medium">No tickets found in this category.</p>
+          {!hideManageActions && (
+            <Link
+              to="/new"
+              className="mt-4 inline-flex items-center gap-2 text-sm text-[#10B981] hover:underline font-semibold"
+            >
+              <Plus size={16} /> Create a new ticket
+            </Link>
+          )}
         </div>
-
-        {/* Footer / Pagination */}
-        <div className="p-6 flex justify-between items-center bg-white border-t border-gray-50">
-          <div className="text-sm text-gray-500 font-medium">
-            Showing{' '}
-            <span className="text-gray-900">{tickets.length}</span>
-            {' '}from{' '}
-            <span className="text-gray-900">{totalElements}</span> results
-            {totalPages > 1 && (
-              <span className="text-gray-400"> — page {currentPage + 1} of {totalPages}</span>
-            )}
+      ) : (
+        <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+          <div className="overflow-x-auto">
+            <table className="w-full text-left border-collapse">
+              <thead>
+                <tr className="bg-[#2D336B] text-white">
+                  <th className="py-4 px-4 w-12">
+                    <input
+                      type="checkbox"
+                      onChange={handleSelectAll}
+                      checked={selectedIds.length === tickets.length && tickets.length > 0}
+                      className="w-4 h-4 rounded border-white/20 bg-white/10 text-white focus:ring-offset-0 focus:ring-0 cursor-pointer"
+                    />
+                  </th>
+                  <th className="py-4 px-4 text-sm font-semibold whitespace-nowrap">Ticket Id</th>
+                  <th className="py-4 px-4 text-sm font-semibold whitespace-nowrap">Title</th>
+                  <th className="py-4 px-4 text-sm font-semibold whitespace-nowrap">Category</th>
+                  <th className="py-4 px-4 text-sm font-semibold whitespace-nowrap">Priority</th>
+                  <th className="py-4 px-4 text-sm font-semibold whitespace-nowrap">Status</th>
+                  <th className="py-4 px-4 text-sm font-semibold whitespace-nowrap">Assigned To</th>
+                  <th className="py-4 px-4 text-sm font-semibold whitespace-nowrap">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {tickets.map((ticket) => (
+                  <TicketItem
+                    key={ticket.ticketId}
+                    ticket={ticket}
+                    onDelete={onDelete}
+                    isSelected={selectedIds.includes(ticket.ticketId)}
+                    onSelect={handleSelectOne}
+                  />
+                ))}
+              </tbody>
+            </table>
           </div>
 
-          <div className="flex items-center gap-2">
-            <button
-              onClick={() => handlePageChange(0)}
-              disabled={first}
-              className="p-2 text-gray-400 hover:text-[#433878] transition-colors rounded-lg hover:bg-gray-50 disabled:opacity-30 disabled:cursor-not-allowed"
-              title="First page"
-            >
-              <ChevronsLeft size={20} />
-            </button>
-            <button
-              onClick={() => handlePageChange(currentPage - 1)}
-              disabled={first}
-              className="p-2 text-gray-400 hover:text-[#433878] transition-colors rounded-lg hover:bg-gray-50 disabled:opacity-30 disabled:cursor-not-allowed"
-              title="Previous page"
-            >
-              <ChevronLeft size={20} />
-            </button>
-
-            <div className="flex items-center gap-1 mx-2">
-              {getPageNumbers().map((pageNum) => (
-                <button
-                  key={pageNum}
-                  onClick={() => handlePageChange(pageNum)}
-                  className={`w-8 h-8 rounded-lg flex items-center justify-center text-sm font-bold transition-colors ${pageNum === currentPage
-                    ? 'bg-[#10B981] text-white'
-                    : 'text-gray-400 hover:bg-gray-50'
-                    }`}
-                >
-                  {pageNum + 1}
-                </button>
-              ))}
+          {/* Footer / Pagination */}
+          <div className="p-6 flex justify-between items-center bg-white border-t border-gray-50">
+            <div className="text-sm text-gray-500 font-medium">
+              Showing{' '}
+              <span className="text-gray-900">{tickets.length}</span>
+              {' '}from{' '}
+              <span className="text-gray-900">{totalElements}</span> results
+              {totalPages > 1 && (
+                <span className="text-gray-400"> — page {currentPage + 1} of {totalPages}</span>
+              )}
             </div>
 
-            <button
-              onClick={() => handlePageChange(currentPage + 1)}
-              disabled={last}
-              className="p-2 text-gray-400 hover:text-[#433878] transition-colors rounded-lg hover:bg-gray-50 disabled:opacity-30 disabled:cursor-not-allowed"
-              title="Next page"
-            >
-              <ChevronRight size={20} />
-            </button>
-            <button
-              onClick={() => handlePageChange(totalPages - 1)}
-              disabled={last}
-              className="p-2 text-gray-400 hover:text-[#433878] transition-colors rounded-lg hover:bg-gray-50 disabled:opacity-30 disabled:cursor-not-allowed"
-              title="Last page"
-            >
-              <ChevronsRight size={20} />
-            </button>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => handlePageChange(0)}
+                disabled={first}
+                className="p-2 text-gray-400 hover:text-[#433878] transition-colors rounded-lg hover:bg-gray-50 disabled:opacity-30 disabled:cursor-not-allowed"
+                title="First page"
+              >
+                <ChevronsLeft size={20} />
+              </button>
+              <button
+                onClick={() => handlePageChange(currentPage - 1)}
+                disabled={first}
+                className="p-2 text-gray-400 hover:text-[#433878] transition-colors rounded-lg hover:bg-gray-50 disabled:opacity-30 disabled:cursor-not-allowed"
+                title="Previous page"
+              >
+                <ChevronLeft size={20} />
+              </button>
+
+              <div className="flex items-center gap-1 mx-2">
+                {getPageNumbers().map((pageNum) => (
+                  <button
+                    key={pageNum}
+                    onClick={() => handlePageChange(pageNum)}
+                    className={`w-8 h-8 rounded-lg flex items-center justify-center text-sm font-bold transition-colors ${pageNum === currentPage
+                      ? 'bg-[#10B981] text-white'
+                      : 'text-gray-400 hover:bg-gray-50'
+                      }`}
+                  >
+                    {pageNum + 1}
+                  </button>
+                ))}
+              </div>
+
+              <button
+                onClick={() => handlePageChange(currentPage + 1)}
+                disabled={last}
+                className="p-2 text-gray-400 hover:text-[#433878] transition-colors rounded-lg hover:bg-gray-50 disabled:opacity-30 disabled:cursor-not-allowed"
+                title="Next page"
+              >
+                <ChevronRight size={20} />
+              </button>
+              <button
+                onClick={() => handlePageChange(totalPages - 1)}
+                disabled={last}
+                className="p-2 text-gray-400 hover:text-[#433878] transition-colors rounded-lg hover:bg-gray-50 disabled:opacity-30 disabled:cursor-not-allowed"
+                title="Last page"
+              >
+                <ChevronsRight size={20} />
+              </button>
+            </div>
           </div>
         </div>
-      </div>
+      )}
     </div>
   );
 };
