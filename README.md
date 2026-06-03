@@ -1,57 +1,144 @@
-# Modern Ticketing System - Client
+# Ticketing Client
 
-A premium, high-performance ticket management dashboard built with React, TypeScript, and Tailwind CSS. This application provides a seamless interface for users to create, track, and manage support tickets with real-time SLA monitoring.
+A modern, full-featured ticket management frontend built with React 19, TypeScript, and Tailwind CSS. Designed to work with the [`ticketing-app`](../ticketing-app) Spring Boot backend.
 
-## ✨ Features
+## Features
 
-- **Dynamic Dashboard**: View and filter tickets by status (Pending, Resolved).
-- **Comprehensive Ticket Details**: Deep-dive into ticket descriptions, category, priority, and metadata.
-- **SLA Tracking**: Visual indicators for response deadlines and SLA breach status.
-- **Interaction System**: Add and view internal/external comments on tickets.
-- **Audit Trail**: Complete status history tracking with reason and actor details.
-- **Modern UI/UX**: Premium design using Tailwind CSS with glassmorphism effects and smooth transitions.
-- **Type-Safe Development**: Full TypeScript integration for robust development and maintenance.
+- **Authentication** — JWT-based login and registration with automatic token refresh and session persistence via `localStorage`. Role-aware UI (`CUSTOMER`, `AGENT`, `ADMIN`).
+- **Dashboard** — Ticket overview cards (Open, New, In-Process, Closed) with per-section date range filters. Pie charts for priority and complaint-category distribution. **Daily Tickets Volume** grouped bar chart with month/year selector, fed by `/api/dashboard/daily-stats`.
+- **My Tickets** — Paginated, filterable list of the authenticated user's own tickets.
+- **Assigned Tickets** — List of tickets currently assigned to the logged-in agent/admin.
+- **All Tickets** _(Admin only)_ — Global ticket view with full filtering capabilities.
+- **Ticket Detail** — Deep-dive view showing description, metadata, SLA status, comments (internal/external), attachments, and full status history with actor and reason.
+- **Create / Edit Ticket** — Form for submitting new tickets or editing existing ones, including priority, category, and description fields.
+- **Category Management** _(Admin only)_ — CRUD interface for complaint categories at `/management/all-categories`.
+- **Role-based Access Control** — `ProtectedRoute` component guards all authenticated routes; `adminOnly` flag restricts admin-exclusive views.
+- **SLA Tracking** — Visual indicators for response deadlines, breach status, and escalation timers.
+- **Toast Notifications** — App-wide toast provider for user-facing feedback.
 
-## 🚀 Tech Stack
+## Tech Stack
 
-- **Framework**: [React 18](https://reactjs.org/)
-- **Build Tool**: [Vite](https://vitejs.dev/)
-- **Styling**: [Tailwind CSS](https://tailwindcss.com/)
-- **Icons**: [Lucide React](https://lucide.dev/)
-- **State Management**: React Hooks (useState, useEffect, useCallback)
-- **Routing**: [React Router v6](https://reactrouter.com/)
+| Layer | Library / Tool |
+|---|---|
+| Framework | [React 19](https://react.dev/) |
+| Language | TypeScript 5.9 |
+| Build tool | [Vite 8](https://vitejs.dev/) |
+| Styling | [Tailwind CSS 4](https://tailwindcss.com/) |
+| Routing | [React Router v7](https://reactrouter.com/) |
+| Charts | [Recharts 3](https://recharts.org/) |
+| Icons | [Lucide React](https://lucide.dev/) |
+| Testing | [Vitest](https://vitest.dev/) + [Testing Library](https://testing-library.com/) |
 
-## 🛠️ Getting Started
+## Project Structure
+
+```
+src/
+├── components/
+│   ├── FilterSidebar.tsx       # Reusable filter panel
+│   ├── Header.tsx              # Top navigation bar
+│   ├── MainLayout.tsx          # Shell with sidebar + header
+│   ├── ProtectedRoute.tsx      # Auth & role guard wrapper
+│   ├── Sidebar.tsx             # Nav sidebar (role-aware menu)
+│   ├── TicketForm.tsx          # Shared create/edit form
+│   ├── TicketItem.tsx          # Single ticket row/card
+│   ├── TicketList.tsx          # Paginated ticket list
+│   ├── ToastProvider.tsx       # App-wide toast context
+│   └── __tests__/
+├── context/
+│   ├── AuthContext.tsx         # Auth state, login, register, logout
+│   └── __tests__/
+├── pages/
+│   ├── AllCategory.tsx         # Category management (Admin)
+│   ├── AllTickets.tsx          # All tickets view (Admin)
+│   ├── AssignedTickets.tsx     # Tickets assigned to current user
+│   ├── AuthLayout.tsx          # Wrapper for login/register pages
+│   ├── CreateTicket.tsx        # New ticket form page
+│   ├── Dashboard.tsx           # Analytics dashboard with charts
+│   ├── EditTicket.tsx          # Edit existing ticket page
+│   ├── Home.tsx                # My Tickets page
+│   ├── Login.tsx               # Login page
+│   ├── Register.tsx            # Registration page
+│   └── TicketDetail.tsx        # Full ticket detail page
+├── services/
+│   └── api.ts                  # Generic apiClient + authApi, ticketApi, categoryApi, userApi
+├── types/
+│   ├── auth.ts                 # AuthUser, AuthResponse, LoginRequest, RegisterRequest
+│   ├── category.ts             # ComplaintCategory request/response types
+│   └── ticket.ts               # Ticket, TicketDetail, SLA, comments, attachments, history
+└── test/
+    └── setup.ts
+```
+
+## Routes
+
+| Path | Component | Access |
+|---|---|---|
+| `/login` | `Login` | Public |
+| `/register` | `Register` | Public |
+| `/dashboard` | `Dashboard` | Authenticated |
+| `/` | `Home` (My Tickets) | Authenticated |
+| `/assigned` | `AssignedTickets` | Authenticated |
+| `/all-tickets` | `AllTickets` | Admin only |
+| `/new` | `CreateTicket` | Authenticated |
+| `/edit/:id` | `EditTicket` | Authenticated |
+| `/tickets/:ticketId` | `TicketDetailPage` | Authenticated |
+| `/management/all-categories` | `AllCategory` | Authenticated |
+
+## Getting Started
 
 ### Prerequisites
 
-- Node.js (v18 or higher)
-- npm or yarn
+- Node.js v18 or higher
+- npm
 
 ### Installation
 
-1. Clone the repository
-2. Install dependencies:
-   ```bash
-   npm install
-   ```
-3. Create a `.env` file (optional, defaults to `http://localhost:8080`)
-4. Start the development server:
-   ```bash
-   npm run dev
-   ```
+```bash
+# From the ticketing-client directory
+npm install
+```
 
-## 📂 Project Structure
+### Environment
 
-- `src/components`: Reusable UI components (TicketList, TicketItem, etc.)
-- `src/pages`: Main application pages (Home, TicketDetail, CreateTicket, etc.)
-- `src/types`: TypeScript interfaces and type definitions
-- `src/assets`: Static assets and global styles
+The API base URL defaults to `http://localhost:8080`. To override it, change `BASE_URL` in `src/services/api.ts` or add an environment variable mechanism via Vite's `import.meta.env`.
 
-## 🔧 backend Integration
+### Development
 
-The client is designed to work with the `ticketing-app` Spring Boot backend. Ensure the backend is running at `http://localhost:8080` or update the `BASE_URL` in the source files.
+```bash
+npm run dev        # Start Vite dev server (http://localhost:5173)
+```
 
----
+### Build
 
-Built with ❤️ for efficient support workflows.
+```bash
+npm run build      # Type-check + production build → dist/
+npm run preview    # Preview the production build locally
+```
+
+### Lint & Test
+
+```bash
+npm run lint       # ESLint
+npm run test       # Vitest (run once)
+```
+
+## Backend Integration
+
+This client is designed to work with the `ticketing-app` Spring Boot backend. The following API groups are consumed:
+
+| Prefix | Purpose |
+|---|---|
+| `/api/auth` | Login, register, token refresh |
+| `/api/tickets` | CRUD, user tickets, detail |
+| `/api/dashboard` | Stats, priority, category, daily volume |
+| `/api/complaint-categories` | Category CRUD |
+| `/api/users` | User search |
+
+Ensure the backend is running at `http://localhost:8080` before starting the dev server.
+
+## Authentication Flow
+
+1. On login/register, `accessToken` and `refreshToken` are stored in `localStorage`.
+2. Every request through `apiClient` attaches `Authorization: Bearer <accessToken>`.
+3. On a `401` response, the client automatically attempts a single token refresh via `/api/auth/refresh` and retries the original request.
+4. If the refresh fails, tokens are cleared and the user is redirected to `/login`.
