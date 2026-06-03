@@ -1,6 +1,9 @@
 import { useState, useEffect } from 'react';
-import { AlertCircle, Clock, CheckCircle, TrendingUp, Calendar } from 'lucide-react';
-import { PieChart, Pie, Legend, Tooltip, ResponsiveContainer } from 'recharts';
+import { AlertCircle, Clock, CheckCircle, TrendingUp, Calendar, ChevronDown } from 'lucide-react';
+import {
+  PieChart, Pie, Legend, Tooltip, ResponsiveContainer,
+  BarChart, Bar, XAxis, YAxis, CartesianGrid,
+} from 'recharts';
 import { apiClient } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 
@@ -50,6 +53,12 @@ interface TicketPriorityApiResponse {
 
 interface TicketCategoryApiResponse extends Array<CategoryCount> {}
 
+interface DailyStatEntry {
+  date: string;
+  reportedCount: number;
+  solvedCount: number;
+}
+
 type DateRange = { from: string; to: string };
 
 export function Dashboard() {
@@ -62,6 +71,13 @@ export function Dashboard() {
   const [statsDateRange, setStatsDateRange] = useState<DateRange>({ from: '', to: '' });
   const [priorityDateRange, setPriorityDateRange] = useState<DateRange>({ from: '', to: '' });
   const [categoryDateRange, setCategoryDateRange] = useState<DateRange>({ from: '', to: '' });
+
+  // Daily stats state
+  const now = new Date();
+  const [selectedYear, setSelectedYear] = useState(now.getFullYear());
+  const [selectedMonth, setSelectedMonth] = useState(now.getMonth()); // 0-indexed
+  const [dailyStats, setDailyStats] = useState<DailyStatEntry[]>([]);
+  const [dailyStatsLoading, setDailyStatsLoading] = useState(true);
 
   useEffect(() => {
     const fetchDashboardData = async () => {
@@ -120,6 +136,30 @@ export function Dashboard() {
 
     fetchDashboardData();
   }, [user, statsDateRange, priorityDateRange, categoryDateRange]);
+
+  useEffect(() => {
+    if (!user) return;
+    const fetchDailyStats = async () => {
+      setDailyStatsLoading(true);
+      try {
+        const from = new Date(selectedYear, selectedMonth, 1);
+        const to = new Date(selectedYear, selectedMonth + 1, 0, 23, 59, 59);
+        const params = new URLSearchParams({
+          from: from.toISOString(),
+          to: to.toISOString(),
+        });
+        const result = await apiClient<{ data: DailyStatEntry[] }>(
+          `/api/dashboard/daily-stats?${params.toString()}`
+        );
+        setDailyStats(Array.isArray(result.data) ? result.data : []);
+      } catch {
+        setDailyStats([]);
+      } finally {
+        setDailyStatsLoading(false);
+      }
+    };
+    fetchDailyStats();
+  }, [user, selectedYear, selectedMonth]);
 
   const handleDateChange = (setter: React.Dispatch<React.SetStateAction<DateRange>>, field: 'from' | 'to', value: string) => {
     setter(prev => ({ ...prev, [field]: value }));
@@ -200,6 +240,70 @@ export function Dashboard() {
             lightColor="bg-green-50"
           />
         </div>
+      </div>
+
+      {/* Daily Tickets Volume Chart */}
+      <div className="bg-white rounded-lg shadow-sm border border-gray-100 p-6 mb-8">
+        <div className="flex items-center justify-between mb-6">
+          <h2 className="text-xl font-bold text-gray-900">Daily Tickets Volume</h2>
+          <MonthSelector
+            year={selectedYear}
+            month={selectedMonth}
+            onChange={(y, m) => { setSelectedYear(y); setSelectedMonth(m); }}
+          />
+        </div>
+        {dailyStatsLoading ? (
+          <div className="flex items-center justify-center h-64">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#433878]"></div>
+          </div>
+        ) : dailyStats.length === 0 ? (
+          <div className="flex items-center justify-center h-64 text-gray-400">No data for this period</div>
+        ) : (
+          <ResponsiveContainer width="100%" height={300}>
+            <BarChart
+              data={dailyStats.map((d) => ({
+                day: d.date.slice(-2).replace(/^0/, '') || d.date,
+                newTicket: d.reportedCount,
+                solved: d.solvedCount,
+              }))}
+              margin={{ top: 4, right: 8, left: 0, bottom: 4 }}
+              barCategoryGap="20%"
+              barGap={-8}
+            >
+              <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f0f0f0" />
+              <XAxis
+                dataKey="day"
+                tick={{ fontSize: 11, fill: '#9ca3af' }}
+                axisLine={false}
+                tickLine={false}
+              />
+              <YAxis
+                tick={{ fontSize: 11, fill: '#9ca3af' }}
+                axisLine={false}
+                tickLine={false}
+                width={36}
+              />
+              <Tooltip
+                cursor={{ fill: 'rgba(0,0,0,0.04)' }}
+                formatter={(value, name) => [
+                  value,
+                  name === 'newTicket' ? 'New Ticket' : 'Solved',
+                ]}
+              />
+              <Legend
+                iconType="circle"
+                iconSize={10}
+                formatter={(value) => (
+                  <span style={{ fontSize: 12, color: '#6b7280' }}>
+                    {value === 'newTicket' ? 'New Ticket' : 'Solved'}
+                  </span>
+                )}
+              />
+              <Bar dataKey="solved" fill="#bfdbfe" radius={[3, 3, 0, 0]} barSize={18} />
+              <Bar dataKey="newTicket" fill="#fca5a5" radius={[3, 3, 0, 0]} barSize={12} />
+            </BarChart>
+          </ResponsiveContainer>
+        )}
       </div>
 
       {/* Charts Section */}
@@ -301,6 +405,69 @@ function StatCard({ title, count, icon: Icon, color, lightColor }: StatCardProps
           <Icon size={24} className={`${color} text-white`} />
         </div>
       </div>
+    </div>
+  );
+}
+
+interface MonthSelectorProps {
+  year: number;
+  month: number; // 0-indexed
+  onChange: (year: number, month: number) => void;
+}
+
+const MONTH_NAMES = [
+  'January', 'February', 'March', 'April', 'May', 'June',
+  'July', 'August', 'September', 'October', 'November', 'December',
+];
+
+function MonthSelector({ year, month, onChange }: MonthSelectorProps) {
+  const [open, setOpen] = useState(false);
+  const currentYear = new Date().getFullYear();
+  const years = Array.from({ length: 5 }, (_, i) => currentYear - i);
+
+  return (
+    <div className="relative">
+      <button
+        onClick={() => setOpen(!open)}
+        className="flex items-center gap-2 px-3 py-2 text-sm bg-white border border-gray-200 hover:bg-gray-50 rounded-lg transition-colors text-gray-700 font-medium shadow-sm"
+      >
+        <span>{MONTH_NAMES[month]}, {String(year).slice(-2)}</span>
+        <ChevronDown size={14} className="text-gray-500" />
+      </button>
+      {open && (
+        <div className="absolute top-full mt-2 right-0 bg-white rounded-lg shadow-xl border border-gray-200 p-4 z-10 w-64">
+          <div className="mb-3">
+            <label className="block text-xs font-semibold text-gray-600 mb-1">Year</label>
+            <select
+              value={year}
+              onChange={(e) => onChange(Number(e.target.value), month)}
+              className="w-full px-2 py-1.5 text-sm border border-gray-200 rounded-md focus:ring-2 focus:ring-[#433878] outline-none"
+            >
+              {years.map((y) => (
+                <option key={y} value={y}>{y}</option>
+              ))}
+            </select>
+          </div>
+          <div>
+            <label className="block text-xs font-semibold text-gray-600 mb-1">Month</label>
+            <div className="grid grid-cols-3 gap-1">
+              {MONTH_NAMES.map((name, idx) => (
+                <button
+                  key={name}
+                  onClick={() => { onChange(year, idx); setOpen(false); }}
+                  className={`px-2 py-1.5 text-xs rounded-md transition-colors ${
+                    idx === month
+                      ? 'bg-[#433878] text-white font-semibold'
+                      : 'bg-gray-50 hover:bg-gray-100 text-gray-700'
+                  }`}
+                >
+                  {name.slice(0, 3)}
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
