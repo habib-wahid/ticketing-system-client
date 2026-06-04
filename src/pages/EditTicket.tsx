@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useParams, Link } from 'react-router-dom';
 import {
-  ArrowLeft, X, Pencil, ChevronDown, Paperclip, Plus, Clock, ExternalLink, Search, MessageSquare
+  ArrowLeft, X, Pencil, ChevronDown, Paperclip, Plus, Search, MessageSquare, History as HistoryIcon
 } from 'lucide-react';
 import type { TicketDetail, TicketCommentDetail } from '../types/ticket';
 import { apiClient, categoryApi } from '../services/api';
@@ -155,7 +155,7 @@ export function EditTicket() {
       {/* Top Breadcrumb Header */}
       <div className="px-8 py-4 bg-gray-50/50 border-b border-gray-100 flex items-center justify-between">
         <div className="flex items-center gap-3 text-sm text-gray-400">
-          <Link to="/" className="hover:text-gray-900 transition-colors">Dashboard</Link>
+          <Link to="/" className="hover:text-gray-900 transition-colors">My Tickets</Link>
           <ChevronDown size={14} className="-rotate-90" strokeWidth={3} />
           <span className="text-gray-900 font-medium">{ticket.ticketId}</span>
         </div>
@@ -531,20 +531,43 @@ export function EditTicket() {
             </div>
           </div>
 
-          {/* Time & History */}
           <div className="pt-10 space-y-4">
-            <div className="flex items-center gap-3 text-xs text-gray-400">
-              <Clock size={16} />
-              <span>Created 2 days ago</span>
-            </div>
-            <div className="flex items-center gap-3 text-xs text-gray-400">
-              <ExternalLink size={16} />
-              <button className="underline hover:text-gray-900 transition-colors">View Status History</button>
-            </div>
+          {ticket.statusHistory && ticket.statusHistory.length > 0 && (
+              <div>
+                <SectionHeading label="Status History" />
+                <div className="space-y-2">
+                  {ticket.statusHistory.map((h, i) => (
+                    <div key={i} className="flex items-start gap-3 text-sm">
+                      <HistoryIcon size={14} className="mt-0.5 text-gray-300 shrink-0" />
+                      <div>
+                        <span className="font-medium text-gray-700">{h.fromStatus} → {h.toStatus}</span>
+                        <span className="text-gray-400 mx-2">·</span>
+                        <span className="text-gray-500">{h.name}</span>
+                        <span className="text-gray-400 mx-2">·</span>
+                        <span className="text-gray-400">{formatDate(h.changedAt)}</span>
+                        {h.reason && <p className="text-xs text-gray-400 mt-0.5">{h.reason}</p>}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
 
         </div>
       </div>
     </div>
   );
+}
+
+function SectionHeading({ label }: { label: string }) {
+  return <h3 className="text-sm font-bold text-gray-400 tracking-widest uppercase mb-3">{label}</h3>;
+}
+
+function formatDate(iso: string): string {
+  if (!iso) return '-';
+  return new Date(iso).toLocaleString(undefined, {
+    dateStyle: 'medium',
+    timeStyle: 'short',
+  });
 }
