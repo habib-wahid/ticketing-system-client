@@ -3,9 +3,11 @@ import type { Ticket, PagedResponse } from '../types/ticket';
 import { TicketList } from '../components/TicketList';
 import { ticketApi } from '../services/api';
 import { useAuth } from '../context/AuthContext';
+import { useToast } from '../components/ToastProvider';
 
 export function Home() {
   const { user } = useAuth();
+  const { showToast } = useToast();
   const [tickets, setTickets] = useState<Ticket[]>([]);
   const [pageInfo, setPageInfo] = useState<Omit<PagedResponse<Ticket>, 'content'>>({
     totalElements: 0,
@@ -16,7 +18,7 @@ export function Home() {
     first: true,
   });
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null); // used for fetch errors only
 
   const fetchTickets = useCallback(async (page: number, currentFilters?: any) => {
     if (!user) return;
@@ -59,8 +61,14 @@ export function Home() {
     fetchTickets(page, filters);
   };
 
-  const handleDelete = (id: string) => {
-    setTickets((prev) => prev.filter((t) => t.ticketId !== id));
+  const handleDelete = async (id: string) => {
+    try {
+      await ticketApi.delete(id);
+      setTickets((prev) => prev.filter((t) => t.ticketId !== id));
+      showToast('Ticket deleted successfully', 'success');
+    } catch (err: unknown) {
+      showToast(err instanceof Error ? err.message : 'Failed to delete ticket', 'error');
+    }
   };
 
   return (

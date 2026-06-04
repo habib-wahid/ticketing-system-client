@@ -215,6 +215,12 @@ export const userApi = {
 };
 
 export const ticketApi = {
+  async delete(ticketId: string): Promise<void> {
+    await apiClient<ApiResponse<void>>(`/api/tickets/${ticketId}`, {
+      method: 'DELETE',
+    });
+  },
+
   async findMyTickets(params: {
     page?: number;
     size?: number;
