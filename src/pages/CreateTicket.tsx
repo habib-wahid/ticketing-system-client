@@ -13,19 +13,33 @@ export function CreateTicket() {
     setLoading(true);
     setError(null);
     try {
-      await apiClient('/api/tickets', {
-        method: 'POST',
-        body: JSON.stringify({
-          title: data.title,
-          description: data.description,
-          complaintCategoryId: data.complaintCategoryId,
-          priority: data.priority,
-          createdByUserId: data.createdByUserId,
-          assignedToUserId: data.assignedToUserId || null,
-          tags: data.tags || [],
-          customFields: {}
-        }),
-      });
+      const ticketPayload = {
+        title: data.title,
+        description: data.description,
+        complaintCategoryId: data.complaintCategoryId,
+        priority: data.priority,
+        createdByUserId: data.createdByUserId,
+        assignedToUserId: data.assignedToUserId || null,
+        tags: data.tags || [],
+        customFields: {},
+      };
+
+      const files: File[] = data.files || [];
+
+      if (files.length > 0) {
+        const formData = new FormData();
+        formData.append(
+          'ticket',
+          new Blob([JSON.stringify(ticketPayload)], { type: 'application/json' }),
+        );
+        formData.append('file', files[0]);
+        await apiClient('/api/tickets', { method: 'POST', body: formData });
+      } else {
+        await apiClient('/api/tickets', {
+          method: 'POST',
+          body: JSON.stringify(ticketPayload),
+        });
+      }
 
       navigate('/');
     } catch (err: unknown) {

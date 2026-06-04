@@ -1,6 +1,14 @@
 import type { AuthResponse, AuthUser, LoginRequest, RegisterRequest } from '../types/auth';
 
-const BASE_URL = 'http://localhost:8080';
+export const API_BASE_URL = 'http://localhost:8080';
+
+/** Resolves a relative file path from the API (e.g. /api/files/...) to a full URL. */
+export function resolveAttachmentUrl(path: string): string {
+  if (path.startsWith('http://') || path.startsWith('https://')) {
+    return path;
+  }
+  return `${API_BASE_URL}${path.startsWith('/') ? path : `/${path}`}`;
+}
 
 const STORAGE_KEYS = {
   ACCESS_TOKEN: 'access_token',
@@ -48,7 +56,7 @@ async function refreshAccessToken(): Promise<AuthResponse> {
   const refreshToken = getRefreshToken();
   if (!refreshToken) throw new Error('No refresh token');
 
-  const res = await fetch(`${BASE_URL}/api/auth/refresh`, {
+  const res = await fetch(`${API_BASE_URL}/api/auth/refresh`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ refreshToken }),
@@ -73,8 +81,10 @@ export async function apiClient<T>(
 ): Promise<T> {
   const token = getAccessToken();
 
+  const isFormData = options.body instanceof FormData;
   const headers: Record<string, string> = {
-    'Content-Type': 'application/json',
+    // Let the browser set Content-Type (with boundary) for multipart requests
+    ...(isFormData ? {} : { 'Content-Type': 'application/json' }),
     ...(options.headers as Record<string, string>),
   };
 
@@ -82,7 +92,7 @@ export async function apiClient<T>(
     headers['Authorization'] = `Bearer ${token}`;
   }
 
-  let response = await fetch(`${BASE_URL}${endpoint}`, {
+  let response = await fetch(`${API_BASE_URL}${endpoint}`, {
     ...options,
     headers,
   });
@@ -97,7 +107,7 @@ export async function apiClient<T>(
       refreshPromise = null;
 
       headers['Authorization'] = `Bearer ${newAuth.accessToken}`;
-      response = await fetch(`${BASE_URL}${endpoint}`, {
+      response = await fetch(`${API_BASE_URL}${endpoint}`, {
         ...options,
         headers,
       });

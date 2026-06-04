@@ -26,6 +26,7 @@ interface TicketFormProps {
 export const TicketForm: React.FC<TicketFormProps> = ({ initialData, onSubmit, onCancel }) => {
   const [categories, setCategories] = useState<ComplaintCategoryResponse[]>([]);
   const [fetchingCategories, setFetchingCategories] = useState(true);
+  const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
 
   const [formData, setFormData] = useState({
     title: initialData?.title || '',
@@ -65,38 +66,41 @@ export const TicketForm: React.FC<TicketFormProps> = ({ initialData, onSubmit, o
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
     if (files) {
-      const newAttachments: TicketAttachmentDetail[] = Array.from(files).map(file => ({
+      const fileArray = Array.from(files);
+      const newAttachments: TicketAttachmentDetail[] = fileArray.map(file => ({
         attachmentId: Math.random().toString(36).substr(2, 9),
         filename: file.name,
         fileSize: file.size,
         mimeType: file.type,
         uploadedBy: formData.createdByUserId,
         uploadedAt: new Date().toISOString(),
-        // Mocking s3Url for display purposes
         s3Url: URL.createObjectURL(file),
       }));
+      setSelectedFiles(prev => [...prev, ...fileArray]);
       setFormData(prev => ({
         ...prev,
-        attachments: [...prev.attachments, ...newAttachments]
+        attachments: [...prev.attachments, ...newAttachments],
       }));
     }
   };
 
   const removeAttachment = (id: string) => {
+    const idx = formData.attachments.findIndex((a: TicketAttachmentDetail) => a.attachmentId === id);
+    if (idx !== -1) {
+      setSelectedFiles(prev => prev.filter((_, i) => i !== idx));
+    }
     setFormData(prev => ({
       ...prev,
-      attachments: prev.attachments.filter((a: TicketAttachmentDetail) => a.attachmentId !== id)
+      attachments: prev.attachments.filter((a: TicketAttachmentDetail) => a.attachmentId !== id),
     }));
   };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    // Wrap the flat formData into the structure expected by onSubmit (which should eventually call the POST API)
-
-    console.log("Ticket data " + formData)
     onSubmit({
       ...formData,
       ticketId: initialData?.ticketId,
+      files: selectedFiles,
     });
   };
 

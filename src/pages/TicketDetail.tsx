@@ -14,9 +14,12 @@ import {
   Tag,
   Clock,
   Calendar,
+  Eye,
+  Download,
+  FileText,
 } from 'lucide-react';
-import type { TicketDetail } from '../types/ticket';
-import { apiClient } from '../services/api';
+import type { TicketDetail, TicketAttachmentDetail } from '../types/ticket';
+import { apiClient, resolveAttachmentUrl } from '../services/api';
 
 const PRIORITY_STYLES: Record<string, { badge: string; dot: string }> = {
   LOW: { badge: 'bg-emerald-100 text-emerald-700 border border-emerald-200', dot: 'bg-emerald-400' },
@@ -87,6 +90,96 @@ function SideCard({
   );
 }
 
+interface FilePreviewModalProps {
+  url: string;
+  filename: string;
+  mimeType: string;
+  fileSize: number;
+  onClose: () => void;
+}
+
+function FilePreviewModal({ url, filename, mimeType, fileSize, onClose }: FilePreviewModalProps) {
+  const fileUrl = resolveAttachmentUrl(url);
+  const isImage = mimeType.startsWith('image/');
+  const isPdf = mimeType === 'application/pdf';
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+      <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={onClose} />
+      <div className="relative bg-white rounded-2xl shadow-2xl flex flex-col w-full max-w-4xl max-h-[90vh] overflow-hidden">
+
+        {/* Modal header */}
+        <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100 shrink-0">
+          <div className="flex items-center gap-3 min-w-0">
+            <div className="w-9 h-9 rounded-xl bg-[#10B981]/10 flex items-center justify-center shrink-0">
+              <Paperclip size={16} className="text-[#10B981]" />
+            </div>
+            <div className="min-w-0">
+              <p className="text-sm font-semibold text-gray-800 truncate">{filename}</p>
+              <p className="text-xs text-gray-400">{(fileSize / 1024).toFixed(1)} KB · {mimeType}</p>
+            </div>
+          </div>
+          <div className="flex items-center gap-2 shrink-0 ml-4">
+            <a
+              href={fileUrl}
+              download={filename}
+              className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-gray-600 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors"
+            >
+              <Download size={13} />
+              Download
+            </a>
+            <button
+              onClick={onClose}
+              className="p-1.5 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
+            >
+              <X size={18} />
+            </button>
+          </div>
+        </div>
+
+        {/* Preview area */}
+        <div className="flex-1 overflow-auto bg-gray-50 flex items-center justify-center p-6 min-h-0">
+          <div>{fileUrl}</div>
+          {isImage && (
+            <img
+              src={fileUrl}
+              alt={filename}
+              className="max-w-full max-h-full object-contain rounded-xl shadow-md"
+            />
+          )}
+          {isPdf && (
+            <iframe
+              src={fileUrl}
+              title={filename}
+              className="w-full h-full min-h-[60vh] rounded-xl border border-gray-200"
+            />
+          )}
+          {!isImage && !isPdf && (
+            <div className="flex flex-col items-center gap-4 text-center">
+              <div className="w-20 h-20 rounded-2xl bg-gray-100 border border-gray-200 flex items-center justify-center">
+                <FileText size={36} className="text-gray-400" />
+              </div>
+              <div>
+                <p className="text-sm font-semibold text-gray-700 mb-1">{filename}</p>
+                <p className="text-xs text-gray-400 mb-5">{mimeType} · {(fileSize / 1024).toFixed(1)} KB</p>
+                <a
+                  href={fileUrl}
+                  download={filename}
+                  className="inline-flex items-center gap-2 px-5 py-2.5 bg-[#10B981] hover:bg-[#059669] text-white text-sm font-semibold rounded-xl transition-colors shadow-lg shadow-green-100"
+                >
+                  <Download size={15} />
+                  Download file
+                </a>
+              </div>
+            </div>
+          )}
+        </div>
+
+      </div>
+    </div>
+  );
+}
+
 export function TicketDetailPage() {
   const { ticketId } = useParams<{ ticketId: string }>();
   const navigate = useNavigate();
@@ -94,6 +187,7 @@ export function TicketDetailPage() {
   const [ticket, setTicket] = useState<TicketDetail | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [previewAttachment, setPreviewAttachment] = useState<TicketAttachmentDetail | null>(null);
 
   useEffect(() => {
     if (!ticketId) return;
@@ -192,22 +286,38 @@ export function TicketDetailPage() {
             {/* Attachments */}
             {ticket.attachments && ticket.attachments.length > 0 && (
               <div>
-                <SectionHeading label="Attachments" />
+                <SectionHeading label={`Attachments (${ticket.attachments.length})`} />
                 <div className="space-y-2">
                   {ticket.attachments.map((att) => (
-                    <a
+                    <div
                       key={att.attachmentId}
-                      href={att.s3Url}
-                      target="_blank"
-                      rel="noreferrer"
                       className="flex items-center gap-3 p-3 rounded-xl border border-gray-100 hover:border-[#10B981] hover:bg-green-50/20 transition-all group"
                     >
-                      <Paperclip size={16} className="text-gray-400 group-hover:text-[#10B981]" />
+                      <Paperclip size={16} className="text-gray-400 group-hover:text-[#10B981] shrink-0" />
                       <div className="flex-1 min-w-0">
                         <p className="text-sm font-medium text-gray-800 truncate">{att.filename}</p>
                         <p className="text-xs text-gray-400">{(att.fileSize / 1024).toFixed(1)} KB · {att.mimeType}</p>
                       </div>
-                    </a>
+                      <div className="flex items-center gap-2 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <button
+                          onClick={() => setPreviewAttachment(att)}
+                          className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-[#10B981] bg-green-50 hover:bg-green-100 rounded-lg transition-colors"
+                          title="Preview file"
+                        >
+                          <Eye size={13} />
+                          View
+                        </button>
+                        <a
+                          href={resolveAttachmentUrl(att.filePath ?? att.s3Url)}
+                          download={att.filename}
+                          className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-gray-500 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors"
+                          title="Download file"
+                        >
+                          <Download size={13} />
+                          Download
+                        </a>
+                      </div>
+                    </div>
                   ))}
                 </div>
               </div>
@@ -401,6 +511,16 @@ export function TicketDetailPage() {
         {/* ── End right column ── */}
       </div>
       {/* ── End body ── */}
+
+      {previewAttachment && (
+        <FilePreviewModal
+          url={previewAttachment.s3Url}
+          filename={previewAttachment.filename}
+          mimeType={previewAttachment.mimeType}
+          fileSize={previewAttachment.fileSize}
+          onClose={() => setPreviewAttachment(null)}
+        />
+      )}
 
       {/* ── Footer ── */}
       <div className="bg-white border-t border-gray-100 px-8 py-5 flex justify-between items-center shrink-0">

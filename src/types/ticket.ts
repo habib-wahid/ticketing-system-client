@@ -73,6 +73,7 @@ export interface TicketCommentDetail {
 export interface TicketAttachmentDetail {
   attachmentId: string;
   filename: string;
+  filePath?: string;
   s3Url: string;
   fileSize: number;
   mimeType: string;
