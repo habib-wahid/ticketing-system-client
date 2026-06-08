@@ -32,7 +32,7 @@ export function CreateTicket() {
           'ticket',
           new Blob([JSON.stringify(ticketPayload)], { type: 'application/json' }),
         );
-        formData.append('file', files[0]);
+        files.forEach((file) => formData.append('files', file));
         await apiClient('/api/tickets', { method: 'POST', body: formData });
       } else {
         await apiClient('/api/tickets', {

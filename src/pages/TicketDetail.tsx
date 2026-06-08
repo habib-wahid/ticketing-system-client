@@ -2,8 +2,6 @@ import { useEffect, useState } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import {
   ArrowLeft,
-  Minus,
-  Square,
   X,
   Paperclip,
   MessageSquare,
@@ -129,8 +127,6 @@ function FilePreviewModal({ url, filename, mimeType, fileSize, onClose }: FilePr
       .finally(() => {
         if (!cancelled) setPdfLoading(false);
       });
-
-    console.log('pdfBlobUrl', pdfBlobUrl);
 
     return () => {
       cancelled = true;
