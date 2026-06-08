@@ -1,9 +1,9 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useParams, Link } from 'react-router-dom';
 import {
-  ArrowLeft, X, Pencil, ChevronDown, Paperclip, Plus, Search, MessageSquare, History as HistoryIcon
+  ArrowLeft, X, Pencil, ChevronDown, Paperclip, Plus, Search, MessageSquare, History as HistoryIcon, AlertTriangle
 } from 'lucide-react';
-import type { TicketDetail, TicketCommentDetail } from '../types/ticket';
+import type { TicketDetail, TicketCommentDetail, TicketAttachmentDetail } from '../types/ticket';
 import { apiClient, categoryApi } from '../services/api';
 import { useToast } from '../components/ToastProvider';
 import type { ComplaintCategoryResponse } from '../types/category';
@@ -33,6 +33,11 @@ export function EditTicket() {
   // Comment states
   const [newComment, setNewComment] = useState('');
   const [isPostingComment, setIsPostingComment] = useState(false);
+
+  // Attachment states
+  const [isUploading, setIsUploading] = useState(false);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [attachmentToDelete, setAttachmentToDelete] = useState<TicketAttachmentDetail | null>(null);
 
   useEffect(() => {
     const fetchTicket = async () => {
@@ -144,6 +149,47 @@ export function EditTicket() {
     } finally {
       setIsPostingComment(false);
     }
+  };
+
+  const handleAddFiles = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const fileList = e.target.files;
+    if (!fileList?.length || !ticket) return;
+    setIsUploading(true);
+    try {
+      const formData = new FormData();
+      formData.append('ticket', new Blob([JSON.stringify({})], { type: 'application/json' }));
+      Array.from(fileList).forEach((f) => formData.append('files', f));
+      const updated = await apiClient<{ data: TicketDetail }>(`/api/tickets/${id}`, { method: 'PUT', body: formData });
+      setTicket(updated.data);
+    } catch (err: any) {
+      showToast(err?.message || 'Failed to upload files', 'error');
+    } finally {
+      setIsUploading(false);
+      e.target.value = '';
+    }
+  };
+
+  const handleDeleteAttachment = async (attachmentId: string) => {
+    if (!ticket) return;
+    setDeletingId(attachmentId);
+    try {
+      const updated = await apiClient<{ data: TicketDetail }>(`/api/tickets/${id}`, {
+        method: 'PUT',
+        body: JSON.stringify({ removeAttachmentIds: [attachmentId] }),
+      });
+      setTicket(updated.data);
+    } catch (err: any) {
+      showToast(err?.message || 'Failed to delete attachment', 'error');
+    } finally {
+      setDeletingId(null);
+    }
+  };
+
+  const confirmDeleteAttachment = async () => {
+    if (!attachmentToDelete) return;
+    const att = attachmentToDelete;
+    setAttachmentToDelete(null);
+    await handleDeleteAttachment(att.attachmentId);
   };
 
   if (error) return <div className="p-12 text-center text-red-500 font-bold">{error}</div>;
@@ -268,16 +314,42 @@ export function EditTicket() {
                     <p className="text-sm font-bold text-gray-900 truncate">{att.filename}</p>
                     <p className="text-xs text-gray-400 font-medium">{(att.fileSize / 1024).toFixed(1)} KB • {att.mimeType.split('/')[1]?.toUpperCase()}</p>
                   </div>
-                  {/* Separate delete API would go here, using a generic update for tags/attachments as demo */}
-                  <button className="p-2 text-gray-300 hover:text-red-500 hover:bg-red-50 rounded-lg transition-all opacity-0 group-hover:opacity-100">
-                    <X size={16} />
+                  <button
+                    onClick={() => setAttachmentToDelete(att)}
+                    disabled={deletingId === att.attachmentId}
+                    className="p-2 text-gray-300 hover:text-red-500 hover:bg-red-50 rounded-lg transition-all opacity-0 group-hover:opacity-100 disabled:opacity-100"
+                  >
+                    {deletingId === att.attachmentId ? (
+                      <div className="w-4 h-4 border-2 border-red-400 border-t-transparent rounded-full animate-spin" />
+                    ) : (
+                      <X size={16} />
+                    )}
                   </button>
                 </div>
               ))}
-              <div className="border-2 border-dashed border-gray-100 rounded-2xl p-4 flex items-center justify-center gap-2 text-gray-400 hover:border-[#10B981] hover:text-[#10B981] hover:bg-green-50/10 transition-all cursor-pointer">
-                <Plus size={18} />
-                <span className="text-sm font-bold">Add Attachment</span>
+              <div
+                onClick={() => { if (!isUploading) document.getElementById('edit-file-upload')?.click(); }}
+                className="border-2 border-dashed border-gray-100 rounded-2xl p-4 flex items-center justify-center gap-2 text-gray-400 hover:border-[#10B981] hover:text-[#10B981] hover:bg-green-50/10 transition-all cursor-pointer"
+              >
+                {isUploading ? (
+                  <>
+                    <div className="w-4 h-4 border-2 border-[#10B981] border-t-transparent rounded-full animate-spin" />
+                    <span className="text-sm font-bold">Uploading...</span>
+                  </>
+                ) : (
+                  <>
+                    <Plus size={18} />
+                    <span className="text-sm font-bold">Add Attachment</span>
+                  </>
+                )}
               </div>
+              <input
+                id="edit-file-upload"
+                type="file"
+                multiple
+                className="hidden"
+                onChange={handleAddFiles}
+              />
             </div>
           </section>
 
@@ -556,6 +628,36 @@ export function EditTicket() {
 
         </div>
       </div>
+
+      {attachmentToDelete && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center">
+          <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={() => setAttachmentToDelete(null)} />
+          <div className="relative bg-white rounded-2xl shadow-2xl p-6 w-full max-w-sm mx-4">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="flex-shrink-0 w-10 h-10 bg-red-100 rounded-full flex items-center justify-center">
+                <AlertTriangle size={20} className="text-red-600" />
+              </div>
+              <h3 className="text-base font-semibold text-gray-900">Delete Attachment</h3>
+            </div>
+            <p className="text-sm text-gray-600 mb-1">Are you sure you want to delete this file?</p>
+            <p className="text-sm font-semibold text-gray-900 mb-5 truncate">{attachmentToDelete.filename}</p>
+            <div className="flex gap-3">
+              <button
+                onClick={() => setAttachmentToDelete(null)}
+                className="flex-1 px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={confirmDeleteAttachment}
+                className="flex-1 px-4 py-2 text-sm font-medium text-white bg-red-600 hover:bg-red-700 rounded-lg transition-colors"
+              >
+                Delete
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
