@@ -103,6 +103,44 @@ function FilePreviewModal({ url, filename, mimeType, fileSize, onClose }: FilePr
   const isImage = mimeType.startsWith('image/');
   const isPdf = mimeType === 'application/pdf';
 
+  const [pdfBlobUrl, setPdfBlobUrl] = useState<string | null>(null);
+  const [pdfLoading, setPdfLoading] = useState(false);
+  const [pdfError, setPdfError] = useState(false);
+
+  useEffect(() => {
+    if (!isPdf) return;
+
+    let cancelled = false;
+    setPdfLoading(true);
+    setPdfError(false);
+    setPdfBlobUrl(null);
+
+    fetch(fileUrl)
+      .then((res) => {
+        if (!res.ok) throw new Error('Failed to load PDF');
+        return res.blob();
+      })
+      .then((blob) => {
+        if (!cancelled) setPdfBlobUrl(URL.createObjectURL(blob));
+      })
+      .catch(() => {
+        if (!cancelled) setPdfError(true);
+      })
+      .finally(() => {
+        if (!cancelled) setPdfLoading(false);
+      });
+
+    console.log('pdfBlobUrl', pdfBlobUrl);
+
+    return () => {
+      cancelled = true;
+      setPdfBlobUrl((prev) => {
+        if (prev) URL.revokeObjectURL(prev);
+        return null;
+      });
+    };
+  }, [fileUrl, isPdf]);
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={onClose} />
@@ -138,8 +176,8 @@ function FilePreviewModal({ url, filename, mimeType, fileSize, onClose }: FilePr
         </div>
 
         {/* Preview area */}
-        <div className="flex-1 overflow-auto bg-gray-50 flex items-center justify-center p-6 min-h-0">
-          <div>{fileUrl}</div>
+        <div className={`flex-1 overflow-auto bg-gray-50 p-6 min-h-0 ${isPdf ? 'min-h-[70vh]' : 'flex items-center justify-center'}`}>
+
           {isImage && (
             <img
               src={fileUrl}
@@ -147,11 +185,34 @@ function FilePreviewModal({ url, filename, mimeType, fileSize, onClose }: FilePr
               className="max-w-full max-h-full object-contain rounded-xl shadow-md"
             />
           )}
-          {isPdf && (
+          {isPdf && pdfLoading && (
+            <div className="flex flex-col items-center justify-center gap-3 min-h-[60vh] text-gray-400">
+              <div className="w-8 h-8 border-2 border-[#10B981] border-t-transparent rounded-full animate-spin" />
+              <p className="text-sm font-medium">Loading PDF preview...</p>
+            </div>
+          )}
+          {isPdf && pdfError && (
+            <div className="flex flex-col items-center gap-4 text-center min-h-[60vh] justify-center">
+              <AlertCircle size={40} className="text-red-400" />
+              <div>
+                <p className="text-sm font-semibold text-gray-700 mb-1">Could not load PDF preview</p>
+                <p className="text-xs text-gray-400 mb-5">You can still download the file below.</p>
+                <a
+                  href={fileUrl}
+                  download={filename}
+                  className="inline-flex items-center gap-2 px-5 py-2.5 bg-[#10B981] hover:bg-[#059669] text-white text-sm font-semibold rounded-xl transition-colors shadow-lg shadow-green-100"
+                >
+                  <Download size={15} />
+                  Download file
+                </a>
+              </div>
+            </div>
+          )}
+          {isPdf && pdfBlobUrl && !pdfLoading && !pdfError && (
             <iframe
-              src={fileUrl}
+              src={pdfBlobUrl}
               title={filename}
-              className="w-full h-full min-h-[60vh] rounded-xl border border-gray-200"
+              className="min-h-[70vh] w-full rounded-xl border border-gray-200"
             />
           )}
           {!isImage && !isPdf && (
@@ -514,7 +575,7 @@ export function TicketDetailPage() {
 
       {previewAttachment && (
         <FilePreviewModal
-          url={previewAttachment.s3Url}
+          url={previewAttachment.filePath ?? previewAttachment.s3Url}
           filename={previewAttachment.filename}
           mimeType={previewAttachment.mimeType}
           fileSize={previewAttachment.fileSize}
