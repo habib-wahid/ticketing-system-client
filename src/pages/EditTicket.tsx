@@ -1,10 +1,10 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useParams, Link } from 'react-router-dom';
 import {
-  ArrowLeft, X, Pencil, ChevronDown, Paperclip, Plus, Search, MessageSquare, History as HistoryIcon, AlertTriangle
+  ArrowLeft, X, Pencil, ChevronDown, Paperclip, Plus, Search, MessageSquare, History as HistoryIcon, AlertTriangle, Trash2
 } from 'lucide-react';
 import type { TicketDetail, TicketCommentDetail, TicketAttachmentDetail } from '../types/ticket';
-import { apiClient, categoryApi } from '../services/api';
+import { apiClient, categoryApi, getStoredUser } from '../services/api';
 import { useToast } from '../components/ToastProvider';
 import type { ComplaintCategoryResponse } from '../types/category';
 
@@ -33,6 +33,11 @@ export function EditTicket() {
   // Comment states
   const [newComment, setNewComment] = useState('');
   const [isPostingComment, setIsPostingComment] = useState(false);
+  const [editingCommentId, setEditingCommentId] = useState<string | null>(null);
+  const [editingCommentText, setEditingCommentText] = useState('');
+  const [isSavingComment, setIsSavingComment] = useState(false);
+  const [commentToDelete, setCommentToDelete] = useState<TicketCommentDetail | null>(null);
+  const [deletingCommentId, setDeletingCommentId] = useState<string | null>(null);
 
   // Attachment states
   const [isUploading, setIsUploading] = useState(false);
@@ -148,6 +153,58 @@ export function EditTicket() {
       showToast(err?.message || 'Failed to add comment', 'error');
     } finally {
       setIsPostingComment(false);
+    }
+  };
+
+  const actingUserId = () => getStoredUser()?.userId || ticket?.createdBy?.userId;
+
+  const startEditComment = (comment: TicketCommentDetail) => {
+    setEditingCommentId(comment.commentId);
+    setEditingCommentText(comment.text);
+  };
+
+  const cancelEditComment = () => {
+    setEditingCommentId(null);
+    setEditingCommentText('');
+  };
+
+  const saveEditComment = async (commentId: string) => {
+    if (!editingCommentText.trim() || !ticket) return;
+    setIsSavingComment(true);
+    try {
+      await apiClient(`/api/tickets/${id}/comments/${commentId}`, {
+        method: 'PUT',
+        body: JSON.stringify({
+          updatedByUserId: actingUserId(),
+          text: editingCommentText,
+        }),
+      });
+      const updated = await apiClient<{ data: TicketDetail }>(`/api/tickets/${id}`);
+      setTicket(updated.data);
+      cancelEditComment();
+    } catch (err: any) {
+      showToast(err?.message || 'Failed to update comment', 'error');
+    } finally {
+      setIsSavingComment(false);
+    }
+  };
+
+  const confirmDeleteComment = async () => {
+    if (!commentToDelete || !ticket) return;
+    const comment = commentToDelete;
+    setCommentToDelete(null);
+    setDeletingCommentId(comment.commentId);
+    try {
+      await apiClient(`/api/tickets/${id}/comments/${comment.commentId}`, {
+        method: 'DELETE',
+        body: JSON.stringify({ deletedByUserId: actingUserId() }),
+      });
+      const updated = await apiClient<{ data: TicketDetail }>(`/api/tickets/${id}`);
+      setTicket(updated.data);
+    } catch (err: any) {
+      showToast(err?.message || 'Failed to delete comment', 'error');
+    } finally {
+      setDeletingCommentId(null);
     }
   };
 
@@ -402,10 +459,59 @@ export function EditTicket() {
                         {new Date(comment.createdAt).toLocaleDateString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
                       </span>
                     </div>
-                    <div className="text-sm text-gray-600 leading-relaxed font-medium whitespace-pre-wrap">
-                      {comment.text}
-                    </div>
+                    {editingCommentId === comment.commentId ? (
+                      <div className="space-y-2">
+                        <textarea
+                          autoFocus
+                          className="w-full bg-gray-50 border border-gray-200 rounded-xl text-sm font-medium text-gray-700 p-3 focus:ring-2 focus:ring-[#10B981]/10 focus:border-[#10B981] transition-all resize-none min-h-[60px]"
+                          value={editingCommentText}
+                          onChange={(e) => setEditingCommentText(e.target.value)}
+                        />
+                        <div className="flex gap-2">
+                          <button
+                            onClick={() => saveEditComment(comment.commentId)}
+                            disabled={isSavingComment || !editingCommentText.trim()}
+                            className="bg-[#10B981] text-white px-3 py-1.5 rounded-lg text-xs font-bold shadow-sm hover:bg-[#059669] disabled:opacity-50 transition-all"
+                          >
+                            {isSavingComment ? 'Saving...' : 'Save'}
+                          </button>
+                          <button
+                            onClick={cancelEditComment}
+                            className="text-gray-500 hover:text-gray-900 text-xs font-bold px-3 py-1.5"
+                          >
+                            Cancel
+                          </button>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="text-sm text-gray-600 leading-relaxed font-medium whitespace-pre-wrap">
+                        {comment.text}
+                      </div>
+                    )}
                   </div>
+                  {editingCommentId !== comment.commentId && (
+                    <div className="flex items-start gap-1 opacity-0 group-hover:opacity-800 transition-opacity">
+                      <button
+                        onClick={() => startEditComment(comment)}
+                        className="p-1.5 text-gray-700 hover:text-[#10B981] hover:bg-green-50 rounded-lg transition-all"
+                        title="Edit comment"
+                      >
+                        <Pencil size={14} />
+                      </button>
+                      <button
+                        onClick={() => setCommentToDelete(comment)}
+                        disabled={deletingCommentId === comment.commentId}
+                        className="p-1.5 text-gray-700 hover:text-red-500 hover:bg-red-50 rounded-lg transition-all disabled:opacity-100"
+                        title="Delete comment"
+                      >
+                        {deletingCommentId === comment.commentId ? (
+                          <div className="w-3.5 h-3.5 border-2 border-red-400 border-t-transparent rounded-full animate-spin" />
+                        ) : (
+                          <Trash2 size={14} />
+                        )}
+                      </button>
+                    </div>
+                  )}
                 </div>
               ))}
               {(!ticket.comments || ticket.comments.length === 0) && (
@@ -650,6 +756,36 @@ export function EditTicket() {
               </button>
               <button
                 onClick={confirmDeleteAttachment}
+                className="flex-1 px-4 py-2 text-sm font-medium text-white bg-red-600 hover:bg-red-700 rounded-lg transition-colors"
+              >
+                Delete
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {commentToDelete && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center">
+          <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={() => setCommentToDelete(null)} />
+          <div className="relative bg-white rounded-2xl shadow-2xl p-6 w-full max-w-sm mx-4">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="flex-shrink-0 w-10 h-10 bg-red-100 rounded-full flex items-center justify-center">
+                <AlertTriangle size={20} className="text-red-600" />
+              </div>
+              <h3 className="text-base font-semibold text-gray-900">Delete Comment</h3>
+            </div>
+            <p className="text-sm text-gray-600 mb-1">Are you sure you want to delete this comment?</p>
+            <p className="text-sm text-gray-500 mb-5 line-clamp-3 italic">"{commentToDelete.text}"</p>
+            <div className="flex gap-3">
+              <button
+                onClick={() => setCommentToDelete(null)}
+                className="flex-1 px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={confirmDeleteComment}
                 className="flex-1 px-4 py-2 text-sm font-medium text-white bg-red-600 hover:bg-red-700 rounded-lg transition-colors"
               >
                 Delete
