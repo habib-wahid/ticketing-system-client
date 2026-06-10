@@ -93,6 +93,7 @@ export function Home() {
           onDelete={handleDelete}
           pageInfo={pageInfo}
           onPageChange={handlePageChange}
+          hideIssuerFilter={true}
         />
       )}
     </div>

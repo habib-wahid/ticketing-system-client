@@ -20,6 +20,7 @@ interface TicketListProps {
   pageInfo: Omit<PagedResponse<Ticket>, 'content'>;
   onPageChange: (page: number, filters?: any) => void;
   hideManageActions?: boolean;
+  hideIssuerFilter?: boolean;
 }
 
 export const TicketList: React.FC<TicketListProps> = ({
@@ -28,6 +29,7 @@ export const TicketList: React.FC<TicketListProps> = ({
   pageInfo,
   onPageChange,
   hideManageActions = false,
+  hideIssuerFilter = false,
 }) => {
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
@@ -160,6 +162,7 @@ export const TicketList: React.FC<TicketListProps> = ({
         filters={filters}
         onApply={handleFilterApply}
         onReset={handleFilterReset}
+        hideIssuerFilter={hideIssuerFilter}
       />
 
       {tickets.length === 0 ? (
@@ -189,8 +192,9 @@ export const TicketList: React.FC<TicketListProps> = ({
                       className="w-4 h-4 rounded border-white/20 bg-white/10 text-white focus:ring-offset-0 focus:ring-0 cursor-pointer"
                     />
                   </th>
-                  <th className="py-4 px-4 text-sm font-semibold whitespace-nowrap">Ticket Id</th>
-                  <th className="py-4 px-4 text-sm font-semibold whitespace-nowrap">Title</th>
+                  <th className="py-4 px-4 text-sm font-semibold whitespace-nowrap">Created At</th>
+                  <th className="py-4 px-4 text-sm font-semibold whitespace-nowrap">Ticket</th>
+                  <th className="py-4 px-4 text-sm font-semibold whitespace-nowrap">Created By</th>
                   <th className="py-4 px-4 text-sm font-semibold whitespace-nowrap">Category</th>
                   <th className="py-4 px-4 text-sm font-semibold whitespace-nowrap">Priority</th>
                   <th className="py-4 px-4 text-sm font-semibold whitespace-nowrap">Status</th>

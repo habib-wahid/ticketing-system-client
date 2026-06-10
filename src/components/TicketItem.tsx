@@ -67,8 +67,18 @@ export const TicketItem: React.FC<TicketItemProps> = ({ ticket, onDelete, isSele
             className="w-4 h-4 rounded border-gray-300 text-[#433878] focus:ring-[#433878] cursor-pointer"
           />
         </td>
-        <td className="py-4 px-4 text-sm text-gray-500 font-medium">{ticket.ticketId}</td>
-        <td className="py-4 px-4 text-sm text-gray-600 max-w-[200px] truncate">{ticket.title}</td>
+        <td className="py-4 px-4 text-sm text-gray-500 whitespace-nowrap">
+          {ticket.createdAt
+            ? new Date(ticket.createdAt).toLocaleDateString('en-GB')
+            : '—'}
+        </td>
+        <td className="py-4 px-4 max-w-[240px]">
+          <p className="text-sm font-medium text-gray-900 truncate">{ticket.title}</p>
+          <p className="text-xs font-mono truncate mt-0.5" style={{ color: '#d10d70' }}>{ticket.ticketId}</p>
+        </td>
+        <td className="py-4 px-4 text-sm text-gray-600 whitespace-nowrap">
+          {ticket.createdBy?.name || '—'}
+        </td>
         <td className="py-4 px-4 text-sm font-medium text-gray-900">{ticket.category?.name || '-'}</td>
         <td className="py-4 px-4 text-sm text-gray-500">{ticket.priority || '-'}</td>
         <td className="py-4 px-4 text-sm text-gray-500">{ticket.status || '-'}</td>
