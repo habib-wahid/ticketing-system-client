@@ -234,6 +234,7 @@ export const ticketApi = {
   async findMyTickets(params: {
     page?: number;
     size?: number;
+    title?: string;
     categoryId?: string;
     priority?: string;
     status?: string;

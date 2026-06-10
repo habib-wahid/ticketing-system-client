@@ -28,6 +28,7 @@ export function Home() {
       const paged = await ticketApi.findMyTickets({
         page,
         size: 10,
+        title: currentFilters?.title || undefined,
         categoryId: currentFilters?.categoryId !== 'all' ? currentFilters?.categoryId : undefined,
         priority: currentFilters?.priority !== 'all' ? currentFilters?.priority?.toUpperCase() : undefined,
         status: currentFilters?.status !== 'all' ? currentFilters?.status?.toUpperCase() : undefined,
@@ -72,29 +73,29 @@ export function Home() {
   };
 
   return (
-    <div className="w-full space-y-0">
-      {/* Content */}
-      {loading && (
-        <div className="p-12 text-center text-gray-400 font-medium">
-          <div className="inline-block w-6 h-6 border-2 border-[#2D336B] border-t-transparent rounded-full animate-spin mb-3" />
-          <p>Loading tickets...</p>
-        </div>
-      )}
-
+    <div className="w-full space-y-0 relative">
       {error && (
         <div className="bg-red-50 text-red-600 p-4 rounded-lg mb-6 text-sm font-medium">
           {error}
         </div>
       )}
 
-      {!loading && !error && (
-        <TicketList
-          tickets={tickets}
-          onDelete={handleDelete}
-          pageInfo={pageInfo}
-          onPageChange={handlePageChange}
-          hideIssuerFilter={true}
-        />
+      <TicketList
+        tickets={tickets}
+        onDelete={handleDelete}
+        pageInfo={pageInfo}
+        onPageChange={handlePageChange}
+        hideIssuerFilter
+        enableTitleSearch
+      />
+
+      {loading && (
+        <div className="absolute inset-0 z-10 flex items-center justify-center bg-white/60 backdrop-blur-[1px]">
+          <div className="text-center text-gray-400 font-medium">
+            <div className="inline-block w-6 h-6 border-2 border-[#2D336B] border-t-transparent rounded-full animate-spin mb-3" />
+            <p>Loading tickets...</p>
+          </div>
+        </div>
       )}
     </div>
   );

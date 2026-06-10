@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import {
   Ticket as TicketIcon,
@@ -21,6 +21,7 @@ interface TicketListProps {
   onPageChange: (page: number, filters?: any) => void;
   hideManageActions?: boolean;
   hideIssuerFilter?: boolean;
+  enableTitleSearch?: boolean;
 }
 
 export const TicketList: React.FC<TicketListProps> = ({
@@ -30,9 +31,23 @@ export const TicketList: React.FC<TicketListProps> = ({
   onPageChange,
   hideManageActions = false,
   hideIssuerFilter = false,
+  enableTitleSearch = false,
 }) => {
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
+  const filtersRef = useRef({
+    priority: 'all',
+    category: 'all',
+    categoryId: 'all',
+    status: 'all',
+    flag: 'all',
+    issuer: '',
+    issuerName: '',
+    assignedTo: '',
+    assignedToName: '',
+    startDate: '',
+    endDate: '',
+  });
   const [filters, setFilters] = useState({
     priority: 'all',
     category: 'all',
@@ -50,9 +65,33 @@ export const TicketList: React.FC<TicketListProps> = ({
 
   const { number: currentPage, totalPages, totalElements, first, last } = pageInfo;
 
+  filtersRef.current = filters;
+  const onPageChangeRef = useRef(onPageChange);
+  onPageChangeRef.current = onPageChange;
+  const hasSearchedRef = useRef(false);
+
+  const buildActiveFilters = (baseFilters = filters, title = searchTerm) => ({
+    ...baseFilters,
+    ...(enableTitleSearch ? { title: title.trim() } : {}),
+  });
+
+  useEffect(() => {
+    if (!enableTitleSearch) return;
+    if (!searchTerm.trim() && !hasSearchedRef.current) return;
+
+    const timer = setTimeout(() => {
+      if (searchTerm.trim()) {
+        hasSearchedRef.current = true;
+      }
+      onPageChangeRef.current(0, buildActiveFilters(filtersRef.current, searchTerm));
+    }, 400);
+
+    return () => clearTimeout(timer);
+  }, [searchTerm, enableTitleSearch]);
+
   const handleFilterApply = (newFilters: any) => {
     setFilters(newFilters);
-    onPageChange(0, newFilters);
+    onPageChange(0, buildActiveFilters(newFilters));
   };
 
   const handleFilterReset = () => {
@@ -70,7 +109,7 @@ export const TicketList: React.FC<TicketListProps> = ({
       endDate: '',
     };
     setFilters(resetFilters);
-    onPageChange(0, resetFilters);
+    onPageChange(0, buildActiveFilters(resetFilters));
   };
 
   const handleSelectAll = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -98,7 +137,7 @@ export const TicketList: React.FC<TicketListProps> = ({
   };
 
   const handlePageChange = (page: number) => {
-    onPageChange(page, filters);
+    onPageChange(page, buildActiveFilters());
   };
 
   return (
@@ -137,10 +176,11 @@ export const TicketList: React.FC<TicketListProps> = ({
               <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
               <input
                 type="text"
-                placeholder="Search..."
+                placeholder={enableTitleSearch ? 'Search by title...' : 'Search...'}
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full pl-9 pr-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#433878]/20 focus:border-[#433878] transition-all placeholder-gray-400"
+                disabled={!enableTitleSearch}
+                className="w-full pl-9 pr-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#433878]/20 focus:border-[#433878] transition-all placeholder-gray-400 disabled:bg-gray-50 disabled:cursor-not-allowed"
               />
             </div>
           </div>
