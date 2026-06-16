@@ -8,6 +8,8 @@ interface TicketItemProps {
   onDelete: (id: string) => void;
   isSelected: boolean;
   onSelect: (id: string) => void;
+  hideCreatedByColumn?: boolean;
+  hideAssignedToColumn?: boolean;
 }
 
 interface DeleteConfirmDialogProps {
@@ -53,7 +55,14 @@ function DeleteConfirmDialog({ ticketId, ticketTitle, onConfirm, onCancel }: Del
   );
 }
 
-export const TicketItem: React.FC<TicketItemProps> = ({ ticket, onDelete, isSelected, onSelect }) => {
+export const TicketItem: React.FC<TicketItemProps> = ({
+  ticket,
+  onDelete,
+  isSelected,
+  onSelect,
+  hideCreatedByColumn = false,
+  hideAssignedToColumn = false,
+}) => {
   const [showConfirm, setShowConfirm] = useState(false);
 
   return (
@@ -76,15 +85,19 @@ export const TicketItem: React.FC<TicketItemProps> = ({ ticket, onDelete, isSele
           <p className="text-sm font-medium text-gray-900 truncate">{ticket.title}</p>
           <p className="text-xs font-mono truncate mt-0.5" style={{ color: '#d10d70' }}>{ticket.ticketId}</p>
         </td>
-        <td className="py-4 px-4 text-sm text-gray-600 whitespace-nowrap">
-          {ticket.createdBy?.name || '—'}
-        </td>
+        {!hideCreatedByColumn && (
+          <td className="py-4 px-4 text-sm text-gray-600 whitespace-nowrap">
+            {ticket.createdBy?.name || '—'}
+          </td>
+        )}
         <td className="py-4 px-4 text-sm font-medium text-gray-900">{ticket.category?.name || '-'}</td>
         <td className="py-4 px-4 text-sm text-gray-500">{ticket.priority || '-'}</td>
         <td className="py-4 px-4 text-sm text-gray-500">{ticket.status || '-'}</td>
-        <td className="py-4 px-4 text-sm text-gray-500">
-          {ticket.assignedTo?.name || 'Unassigned'}
-        </td>
+        {!hideAssignedToColumn && (
+          <td className="py-4 px-4 text-sm text-gray-500">
+            {ticket.assignedTo?.name || 'Unassigned'}
+          </td>
+        )}
         <td className="py-4 px-4">
           <div className="flex gap-3 justify-end">
             <Link

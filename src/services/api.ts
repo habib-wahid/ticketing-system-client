@@ -253,4 +253,26 @@ export const ticketApi = {
     const json = await apiClient<ApiResponse<PagedResponse<Ticket>>>(`/api/tickets/user?${searchParams.toString()}`);
     return json.data;
   },
+
+  async findMyAssignedTickets(params: {
+    page?: number;
+    size?: number;
+    title?: string;
+    categoryId?: string;
+    priority?: string;
+    status?: string;
+    createdBy?: string;
+    startDate?: string;
+    endDate?: string;
+  }): Promise<PagedResponse<Ticket>> {
+    const searchParams = new URLSearchParams();
+    Object.entries(params).forEach(([key, value]) => {
+      if (value !== undefined && value !== null && value !== '') {
+        searchParams.append(key, value.toString());
+      }
+    });
+
+    const json = await apiClient<ApiResponse<PagedResponse<Ticket>>>(`/api/tickets/assigned?${searchParams.toString()}`);
+    return json.data;
+  },
 };

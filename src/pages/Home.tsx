@@ -87,6 +87,7 @@ export function Home() {
         onPageChange={handlePageChange}
         hideIssuerFilter
         enableTitleSearch
+        hideCreatedByColumn
       />
 
       {loading && (

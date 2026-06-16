@@ -22,6 +22,8 @@ interface TicketListProps {
   hideManageActions?: boolean;
   hideIssuerFilter?: boolean;
   enableTitleSearch?: boolean;
+  hideCreatedByColumn?: boolean;
+  hideAssignedToColumn?: boolean;
 }
 
 export const TicketList: React.FC<TicketListProps> = ({
@@ -32,6 +34,8 @@ export const TicketList: React.FC<TicketListProps> = ({
   hideManageActions = false,
   hideIssuerFilter = false,
   enableTitleSearch = false,
+  hideCreatedByColumn = false,
+  hideAssignedToColumn = false,
 }) => {
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
@@ -234,11 +238,15 @@ export const TicketList: React.FC<TicketListProps> = ({
                   </th>
                   <th className="py-4 px-4 text-sm font-semibold whitespace-nowrap">Created At</th>
                   <th className="py-4 px-4 text-sm font-semibold whitespace-nowrap">Ticket</th>
-                  <th className="py-4 px-4 text-sm font-semibold whitespace-nowrap">Created By</th>
+                  {!hideCreatedByColumn && (
+                    <th className="py-4 px-4 text-sm font-semibold whitespace-nowrap">Created By</th>
+                  )}
                   <th className="py-4 px-4 text-sm font-semibold whitespace-nowrap">Category</th>
                   <th className="py-4 px-4 text-sm font-semibold whitespace-nowrap">Priority</th>
                   <th className="py-4 px-4 text-sm font-semibold whitespace-nowrap">Status</th>
-                  <th className="py-4 px-4 text-sm font-semibold whitespace-nowrap">Assigned To</th>
+                  {!hideAssignedToColumn && (
+                    <th className="py-4 px-4 text-sm font-semibold whitespace-nowrap">Assigned To</th>
+                  )}
                   <th className="py-4 px-4 text-sm font-semibold whitespace-nowrap">Actions</th>
                 </tr>
               </thead>
@@ -250,6 +258,8 @@ export const TicketList: React.FC<TicketListProps> = ({
                     onDelete={onDelete}
                     isSelected={selectedIds.includes(ticket.ticketId)}
                     onSelect={handleSelectOne}
+                    hideCreatedByColumn={hideCreatedByColumn}
+                    hideAssignedToColumn={hideAssignedToColumn}
                   />
                 ))}
               </tbody>
