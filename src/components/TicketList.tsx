@@ -21,6 +21,7 @@ interface TicketListProps {
   onPageChange: (page: number, filters?: any) => void;
   hideManageActions?: boolean;
   hideIssuerFilter?: boolean;
+  hideAssignedToFilter?: boolean;
   enableTitleSearch?: boolean;
   hideCreatedByColumn?: boolean;
   hideAssignedToColumn?: boolean;
@@ -33,6 +34,7 @@ export const TicketList: React.FC<TicketListProps> = ({
   onPageChange,
   hideManageActions = false,
   hideIssuerFilter = false,
+  hideAssignedToFilter = false,
   enableTitleSearch = false,
   hideCreatedByColumn = false,
   hideAssignedToColumn = false,
@@ -207,6 +209,7 @@ export const TicketList: React.FC<TicketListProps> = ({
         onApply={handleFilterApply}
         onReset={handleFilterReset}
         hideIssuerFilter={hideIssuerFilter}
+        hideAssignedToFilter={hideAssignedToFilter}
       />
 
       {tickets.length === 0 ? (

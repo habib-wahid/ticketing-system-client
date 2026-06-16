@@ -78,6 +78,7 @@ export function AssignedTickets() {
         hideManageActions
         enableTitleSearch
         hideAssignedToColumn
+        hideAssignedToFilter
       />
 
       {loading && (
