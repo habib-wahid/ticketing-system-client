@@ -1,5 +1,11 @@
 export type TicketFilterStatus = 'PENDING' | 'RESOLVED';
 
+export interface UserTicketStats {
+  totalTickets: number;
+  assignedTickets: number;
+  resolvedTickets: number;
+}
+
 export interface PagedResponse<T> {
   content: T[];
   totalElements: number;

@@ -28,3 +28,35 @@ export interface RegisterRequest {
   firstName: string;
   lastName: string;
 }
+
+export interface UserProfileResponse {
+  fullName: string;
+  email: string;
+  phone: string;
+  role: UserRole;
+}
+
+export interface UserResponse {
+  userId: string;
+  email: string;
+  firstName: string;
+  lastName: string;
+  phone: string;
+  role: UserRole;
+  isActive: boolean;
+  emailVerified: boolean;
+  department: string | null;
+  managerId: string | null;
+  lastLoginAt: string | null;
+  createdAt: string | null;
+  updatedAt: string | null;
+  preferences?: Record<string, unknown>;
+}
+
+export interface UserUpdateRequest {
+  email?: string;
+  password?: string;
+  firstName?: string;
+  lastName?: string;
+  phone?: string;
+}

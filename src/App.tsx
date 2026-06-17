@@ -11,6 +11,7 @@ import { Login } from './pages/Login';
 import { Register } from './pages/Register';
 import { TicketDetailPage } from './pages/TicketDetail';
 import { AllCategory } from './pages/AllCategory';
+import { Profile } from './pages/Profile';
 
 function App() {
 
@@ -97,6 +98,16 @@ function App() {
           <ProtectedRoute>
             <MainLayout>
               <AllCategory />
+            </MainLayout>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/profile"
+        element={
+          <ProtectedRoute>
+            <MainLayout>
+              <Profile />
             </MainLayout>
           </ProtectedRoute>
         }

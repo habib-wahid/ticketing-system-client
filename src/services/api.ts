@@ -1,4 +1,12 @@
-import type { AuthResponse, AuthUser, LoginRequest, RegisterRequest } from '../types/auth';
+import type {
+  AuthResponse,
+  AuthUser,
+  LoginRequest,
+  RegisterRequest,
+  UserProfileResponse,
+  UserResponse,
+  UserUpdateRequest,
+} from '../types/auth';
 
 export const API_BASE_URL = 'http://localhost:8080';
 
@@ -36,6 +44,10 @@ export function clearTokens(): void {
   localStorage.removeItem(STORAGE_KEYS.ACCESS_TOKEN);
   localStorage.removeItem(STORAGE_KEYS.REFRESH_TOKEN);
   localStorage.removeItem(STORAGE_KEYS.USER);
+}
+
+export function updateStoredUser(user: AuthUser): void {
+  localStorage.setItem(STORAGE_KEYS.USER, JSON.stringify(user));
 }
 
 export function getStoredUser() {
@@ -158,7 +170,7 @@ export const authApi = {
 
 // ── Category API calls ────────────────────────────────────────
 
-import type { PagedResponse, Ticket } from '../types/ticket';
+import type { PagedResponse, Ticket, UserTicketStats } from '../types/ticket';
 import type {
   ComplaintCategoryResponse,
   ComplaintCategoryCreateRequest,
@@ -222,6 +234,24 @@ export const userApi = {
     const json = await apiClient<ApiResponse<AuthUser[]>>(`/api/users/search?name=${encodeURIComponent(query)}`);
     return json.data;
   },
+
+  async getProfile(): Promise<UserProfileResponse> {
+    const json = await apiClient<ApiResponse<UserProfileResponse>>('/api/users/profile');
+    return json.data;
+  },
+
+  async getById(userId: string): Promise<UserResponse> {
+    const json = await apiClient<ApiResponse<UserResponse>>(`/api/users/${userId}`);
+    return json.data;
+  },
+
+  async updateProfile(request: UserUpdateRequest): Promise<UserResponse> {
+    const json = await apiClient<ApiResponse<UserResponse>>('/api/users/profile', {
+      method: 'PUT',
+      body: JSON.stringify(request),
+    });
+    return json.data;
+  },
 };
 
 export const ticketApi = {
@@ -229,6 +259,11 @@ export const ticketApi = {
     await apiClient<ApiResponse<void>>(`/api/tickets/${ticketId}`, {
       method: 'DELETE',
     });
+  },
+
+  async getMyTicketStats(): Promise<UserTicketStats> {
+    const json = await apiClient<ApiResponse<UserTicketStats>>('/api/tickets/stats');
+    return json.data;
   },
 
   async findMyTickets(params: {

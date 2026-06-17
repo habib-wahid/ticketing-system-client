@@ -1,9 +1,11 @@
-import { Search, Menu, Bell, ChevronDown, LogOut, User, Mail, Phone } from 'lucide-react';
+import { Menu, Bell, ChevronDown, LogOut, User, Mail, Phone } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 
 export const Header = () => {
   const { user, logout } = useAuth();
+  const navigate = useNavigate();
   const [isProfileOpen, setIsProfileOpen] = useState(false);
 
   const displayName = user ? `${user.firstName}` : 'Guest';
@@ -89,7 +91,13 @@ export const Header = () => {
 
               {/* Menu Items */}
               <div className="py-3 space-y-2">
-                <button className="w-full flex items-center gap-3 px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 rounded-md transition-colors">
+                <button
+                  onClick={() => {
+                    navigate('/profile');
+                    setIsProfileOpen(false);
+                  }}
+                  className="w-full flex items-center gap-3 px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 rounded-md transition-colors"
+                >
                   <User size={16} className="text-gray-500" />
                   <span>View Profile</span>
                 </button>
