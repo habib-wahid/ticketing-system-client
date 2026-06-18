@@ -176,6 +176,11 @@ import type {
   ComplaintCategoryCreateRequest,
   ComplaintCategoryUpdateRequest,
 } from '../types/category';
+import type {
+  SlaPolicyResponse,
+  SlaPolicyCreateRequest,
+  SlaPolicyUpdateRequest,
+} from '../types/sla';
 
 export const categoryApi = {
   async findAll(page: number = 0, size: number = 20, name?: string): Promise<PagedResponse<ComplaintCategoryResponse>> {
@@ -224,6 +229,42 @@ export const categoryApi = {
 
   async delete(id: string): Promise<void> {
     await apiClient<ApiResponse<void>>(`/api/complaint-categories/${id}`, {
+      method: 'DELETE',
+    });
+  },
+};
+
+// ── SLA Policy API calls ──────────────────────────────────────
+
+export const slaPolicyApi = {
+  async findAll(): Promise<SlaPolicyResponse[]> {
+    const json = await apiClient<ApiResponse<SlaPolicyResponse[]>>('/api/sla-policies');
+    return json.data ?? [];
+  },
+
+  async findById(id: string): Promise<SlaPolicyResponse> {
+    const json = await apiClient<ApiResponse<SlaPolicyResponse>>(`/api/sla-policies/${id}`);
+    return json.data;
+  },
+
+  async create(request: SlaPolicyCreateRequest): Promise<SlaPolicyResponse> {
+    const json = await apiClient<ApiResponse<SlaPolicyResponse>>('/api/sla-policies', {
+      method: 'POST',
+      body: JSON.stringify(request),
+    });
+    return json.data;
+  },
+
+  async update(id: string, request: SlaPolicyUpdateRequest): Promise<SlaPolicyResponse> {
+    const json = await apiClient<ApiResponse<SlaPolicyResponse>>(`/api/sla-policies/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(request),
+    });
+    return json.data;
+  },
+
+  async delete(id: string): Promise<void> {
+    await apiClient<ApiResponse<void>>(`/api/sla-policies/${id}`, {
       method: 'DELETE',
     });
   },

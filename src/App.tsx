@@ -11,6 +11,7 @@ import { Login } from './pages/Login';
 import { Register } from './pages/Register';
 import { TicketDetailPage } from './pages/TicketDetail';
 import { AllCategory } from './pages/AllCategory';
+import { SlaPolicies } from './pages/SlaPolicies';
 import { Profile } from './pages/Profile';
 
 function App() {
@@ -98,6 +99,16 @@ function App() {
           <ProtectedRoute>
             <MainLayout>
               <AllCategory />
+            </MainLayout>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/management/sla-policies"
+        element={
+          <ProtectedRoute adminOnly>
+            <MainLayout>
+              <SlaPolicies />
             </MainLayout>
           </ProtectedRoute>
         }

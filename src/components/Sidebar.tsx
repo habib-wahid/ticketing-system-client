@@ -21,7 +21,8 @@ export const Sidebar = () => {
       icon: Settings,
       label: 'Management',
       children: [
-        { label: 'All-Categories', path: '/management/all-categories' }
+        { label: 'All-Categories', path: '/management/all-categories' },
+        { label: 'SLA Policies', path: '/management/sla-policies' }
       ]
     }] : []),
   ];
