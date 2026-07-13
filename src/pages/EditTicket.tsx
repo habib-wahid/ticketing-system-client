@@ -540,6 +540,7 @@ export function EditTicket() {
                 <option value="NEW">NEW</option>
                 <option value="ASSIGNED">ASSIGNED</option>
                 <option value="IN_PROGRESS">IN PROGRESS</option>
+                <option value="WAITING_ON_CUSTOMER">WAITING ON CUSTOMER</option>
                 <option value="RESOLVED">RESOLVED</option>
                 <option value="CLOSED">CLOSED</option>
                 <option value="REOPENED">REOPENED</option>

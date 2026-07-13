@@ -254,6 +254,7 @@ export const FilterSidebar: React.FC<FilterSidebarProps> = ({
               <option value="NEW">New</option>
               <option value="ASSIGNED">Assigned</option>
               <option value="IN_PROGRESS">In Process</option>
+              <option value="WAITING_ON_CUSTOMER">Waiting on Customer</option>
               <option value="RESOLVED">Resolved</option>
               <option value="CLOSED">Closed</option>
               <option value="REOPENED">Reopened</option>

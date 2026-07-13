@@ -6,7 +6,13 @@ import type {
   UserProfileResponse,
   UserResponse,
   UserUpdateRequest,
+  UserRole,
 } from '../types/auth';
+import type {
+  CategoryDistributorMappingCreateRequest,
+  CategoryDistributorMappingResponse,
+  CategoryDistributorMappingUpdateRequest,
+} from '../types/categoryDistributorMapping';
 
 export const API_BASE_URL = 'http://localhost:8080';
 
@@ -270,9 +276,74 @@ export const slaPolicyApi = {
   },
 };
 
+// ── Category Distributor Mapping API ──────────────────────────
+
+export const categoryDistributorMappingApi = {
+  async findAll(): Promise<CategoryDistributorMappingResponse[]> {
+    const json = await apiClient<ApiResponse<CategoryDistributorMappingResponse[]>>(
+      '/api/category-distributor-mappings',
+    );
+    return json.data ?? [];
+  },
+
+  async findById(id: string): Promise<CategoryDistributorMappingResponse> {
+    const json = await apiClient<ApiResponse<CategoryDistributorMappingResponse>>(
+      `/api/category-distributor-mappings/${id}`,
+    );
+    return json.data;
+  },
+
+  async findByCategoryId(categoryId: string): Promise<CategoryDistributorMappingResponse> {
+    const json = await apiClient<ApiResponse<CategoryDistributorMappingResponse>>(
+      `/api/category-distributor-mappings/by-category/${categoryId}`,
+    );
+    return json.data;
+  },
+
+  async create(
+    request: CategoryDistributorMappingCreateRequest,
+  ): Promise<CategoryDistributorMappingResponse> {
+    const json = await apiClient<ApiResponse<CategoryDistributorMappingResponse>>(
+      '/api/category-distributor-mappings',
+      {
+        method: 'POST',
+        body: JSON.stringify(request),
+      },
+    );
+    return json.data;
+  },
+
+  async update(
+    id: string,
+    request: CategoryDistributorMappingUpdateRequest,
+  ): Promise<CategoryDistributorMappingResponse> {
+    const json = await apiClient<ApiResponse<CategoryDistributorMappingResponse>>(
+      `/api/category-distributor-mappings/${id}`,
+      {
+        method: 'PUT',
+        body: JSON.stringify(request),
+      },
+    );
+    return json.data;
+  },
+
+  async delete(id: string): Promise<void> {
+    await apiClient<ApiResponse<void>>(`/api/category-distributor-mappings/${id}`, {
+      method: 'DELETE',
+    });
+  },
+};
+
 export const userApi = {
-  async search(query: string): Promise<AuthUser[]> {
-    const json = await apiClient<ApiResponse<AuthUser[]>>(`/api/users/search?name=${encodeURIComponent(query)}`);
+  async search(query: string, role?: UserRole): Promise<AuthUser[]> {
+    const params = new URLSearchParams();
+    if (query) {
+      params.set('name', query);
+    }
+    if (role) {
+      params.set('role', role);
+    }
+    const json = await apiClient<ApiResponse<AuthUser[]>>(`/api/users/search?${params.toString()}`);
     return json.data;
   },
 

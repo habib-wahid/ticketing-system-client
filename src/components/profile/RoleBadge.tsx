@@ -1,12 +1,12 @@
-import React from 'react';
-import { Shield, Headset, User } from 'lucide-react';
+import type { ComponentType } from 'react';
+import { Shield, Headset, User, Route } from 'lucide-react';
 import type { UserRole } from '../../types/auth';
 
 interface RoleBadgeProps {
   role: UserRole;
 }
 
-const ROLE_STYLES: Record<UserRole, { label: string; className: string; Icon: React.ComponentType<{ size?: number; className?: string }> }> = {
+const ROLE_STYLES: Record<UserRole, { label: string; className: string; Icon: ComponentType<{ size?: number; className?: string }> }> = {
   ADMIN: {
     label: 'Admin',
     className: 'bg-[#433878]/10 text-[#433878]',
@@ -17,6 +17,11 @@ const ROLE_STYLES: Record<UserRole, { label: string; className: string; Icon: Re
     className: 'bg-[#10B981]/10 text-[#059669]',
     Icon: Headset,
   },
+  DISTRIBUTOR: {
+    label: 'Distributor',
+    className: 'bg-[#0EA5E9]/10 text-[#0284C7]',
+    Icon: Route,
+  },
   CUSTOMER: {
     label: 'Customer',
     className: 'bg-gray-100 text-gray-600',
@@ -24,7 +29,7 @@ const ROLE_STYLES: Record<UserRole, { label: string; className: string; Icon: Re
   },
 };
 
-export const RoleBadge: React.FC<RoleBadgeProps> = ({ role }) => {
+export const RoleBadge = ({ role }: RoleBadgeProps) => {
   const { label, className, Icon } = ROLE_STYLES[role] ?? ROLE_STYLES.CUSTOMER;
 
   return (

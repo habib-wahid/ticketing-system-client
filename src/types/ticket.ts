@@ -46,12 +46,15 @@ export interface Ticket {
   assignedAt?: string | null;
   resolvedAt?: string | null;
   closedAt?: string | null;
+  slaPolicyId?: string | null;
   sla?: TicketSlaSummary | null;
   responseDeadline?: string | null;
   escalationDueAt?: string | null;
   nextReminderAt?: string | null;
   slaBreachedAt?: string | null;
   escalationLevel?: number;
+  firstResponseMinutes?: number | null;
+  responseBreached?: boolean | null;
   tags?: string[];
   attachments?: TicketAttachmentDetail[];
   customFields?: Record<string, unknown>;
@@ -114,6 +117,7 @@ export interface TicketDetail {
   assignedAt?: string | null;
   resolvedAt?: string | null;
   closedAt?: string | null;
+  slaPolicyId?: string | null;
   sla?: TicketSlaSummary | null;
   responseDeadline?: string | null;
   escalationDueAt?: string | null;

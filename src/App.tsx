@@ -12,6 +12,7 @@ import { Register } from './pages/Register';
 import { TicketDetailPage } from './pages/TicketDetail';
 import { AllCategory } from './pages/AllCategory';
 import { SlaPolicies } from './pages/SlaPolicies';
+import { CategoryDistributorMappings } from './pages/CategoryDistributorMappings';
 import { Profile } from './pages/Profile';
 
 function App() {
@@ -109,6 +110,16 @@ function App() {
           <ProtectedRoute adminOnly>
             <MainLayout>
               <SlaPolicies />
+            </MainLayout>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/management/category-distributors"
+        element={
+          <ProtectedRoute adminOnly>
+            <MainLayout>
+              <CategoryDistributorMappings />
             </MainLayout>
           </ProtectedRoute>
         }

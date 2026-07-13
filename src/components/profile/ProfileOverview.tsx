@@ -14,6 +14,7 @@ const STATUS_STYLES: Record<string, string> = {
   NEW: 'bg-blue-50 text-blue-600',
   ASSIGNED: 'bg-indigo-50 text-indigo-600',
   IN_PROGRESS: 'bg-amber-50 text-amber-600',
+  WAITING_ON_CUSTOMER: 'bg-slate-100 text-slate-600',
   RESOLVED: 'bg-emerald-50 text-emerald-600',
   CLOSED: 'bg-gray-100 text-gray-500',
   REOPENED: 'bg-orange-50 text-orange-600',

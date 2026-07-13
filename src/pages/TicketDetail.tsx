@@ -29,6 +29,7 @@ const PRIORITY_STYLES: Record<string, { badge: string; dot: string }> = {
 const STATUS_STYLES: Record<string, { badge: string; dot: string }> = {
   OPEN: { badge: 'bg-blue-100 text-blue-700 border border-blue-200', dot: 'bg-blue-400' },
   IN_PROGRESS: { badge: 'bg-orange-100 text-orange-700 border border-orange-200', dot: 'bg-orange-400' },
+  WAITING_ON_CUSTOMER: { badge: 'bg-slate-100 text-slate-700 border border-slate-200', dot: 'bg-slate-400' },
   RESOLVED: { badge: 'bg-green-100 text-green-700 border border-green-200', dot: 'bg-green-400' },
   CLOSED: { badge: 'bg-gray-100 text-gray-600 border border-gray-200', dot: 'bg-gray-400' },
   PENDING: { badge: 'bg-yellow-100 text-yellow-700 border border-yellow-200', dot: 'bg-yellow-400' },

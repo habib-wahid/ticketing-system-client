@@ -22,7 +22,8 @@ export const Sidebar = () => {
       label: 'Management',
       children: [
         { label: 'All-Categories', path: '/management/all-categories' },
-        { label: 'SLA Policies', path: '/management/sla-policies' }
+        { label: 'SLA Policies', path: '/management/sla-policies' },
+        { label: 'Category Distributors', path: '/management/category-distributors' },
       ]
     }] : []),
   ];
