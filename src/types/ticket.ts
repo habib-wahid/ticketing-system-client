@@ -34,6 +34,33 @@ export interface TicketSlaSummary {
   breached: boolean;
 }
 
+export interface TicketDistributedBy {
+  userId: string;
+  name: string;
+  role: string;
+}
+
+export type TicketAssignmentAction =
+  | 'AUTO_ROUTED'
+  | 'DISTRIBUTED'
+  | 'REASSIGNED'
+  | 'RETURNED_TO_DISTRIBUTOR'
+  | 'SYSTEM';
+
+export interface TicketAssignmentHistoryDetail {
+  userId: string;
+  name: string;
+  role: string;
+  fromAt: string;
+  toAt?: string | null;
+  durationMinutes?: number | null;
+  action: TicketAssignmentAction;
+  actedByUserId: string;
+  actedByName: string;
+  reason?: string;
+  distributedByUserId?: string | null;
+}
+
 export interface Ticket {
   ticketId: string;
   title: string;
@@ -43,6 +70,7 @@ export interface Ticket {
   status: string;
   createdBy?: TicketCreatedBy | null;
   assignedTo?: TicketAssignedTo | null;
+  distributedBy?: TicketDistributedBy | null;
   assignedAt?: string | null;
   resolvedAt?: string | null;
   closedAt?: string | null;
@@ -114,6 +142,7 @@ export interface TicketDetail {
   status: string;
   createdBy?: TicketCreatedBy | null;
   assignedTo?: TicketAssignedTo | null;
+  distributedBy?: TicketDistributedBy | null;
   assignedAt?: string | null;
   resolvedAt?: string | null;
   closedAt?: string | null;
@@ -127,6 +156,7 @@ export interface TicketDetail {
   comments?: TicketCommentDetail[];
   attachments?: TicketAttachmentDetail[];
   statusHistory?: TicketStatusHistoryDetail[];
+  assignmentHistory?: TicketAssignmentHistoryDetail[];
   slaEvents?: TicketSlaEventDetail[];
   tags?: string[];
   customFields?: Record<string, unknown>;

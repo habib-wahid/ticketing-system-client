@@ -176,7 +176,7 @@ export const authApi = {
 
 // ── Category API calls ────────────────────────────────────────
 
-import type { PagedResponse, Ticket, UserTicketStats } from '../types/ticket';
+import type { PagedResponse, Ticket, TicketDetail, UserTicketStats } from '../types/ticket';
 import type {
   ComplaintCategoryResponse,
   ComplaintCategoryCreateRequest,
@@ -420,6 +420,22 @@ export const ticketApi = {
     });
 
     const json = await apiClient<ApiResponse<PagedResponse<Ticket>>>(`/api/tickets/assigned?${searchParams.toString()}`);
+    return json.data;
+  },
+
+  async assign(ticketId: string, assignedToUserId: string, reason?: string): Promise<TicketDetail> {
+    const json = await apiClient<ApiResponse<TicketDetail>>(`/api/tickets/${ticketId}/assign`, {
+      method: 'POST',
+      body: JSON.stringify({ assignedToUserId, reason }),
+    });
+    return json.data;
+  },
+
+  async returnToDistributor(ticketId: string, reason?: string): Promise<TicketDetail> {
+    const json = await apiClient<ApiResponse<TicketDetail>>(`/api/tickets/${ticketId}/return-to-distributor`, {
+      method: 'POST',
+      body: JSON.stringify({ reason }),
+    });
     return json.data;
   },
 };

@@ -15,9 +15,13 @@ import {
   Eye,
   Download,
   FileText,
+  UserPlus,
+  Undo2,
 } from 'lucide-react';
 import type { TicketDetail, TicketAttachmentDetail } from '../types/ticket';
-import { apiClient, resolveAttachmentUrl } from '../services/api';
+import { apiClient, resolveAttachmentUrl, ticketApi, userApi } from '../services/api';
+import { useAuth } from '../context/AuthContext';
+import type { AuthUser } from '../types/auth';
 
 const PRIORITY_STYLES: Record<string, { badge: string; dot: string }> = {
   LOW: { badge: 'bg-emerald-100 text-emerald-700 border border-emerald-200', dot: 'bg-emerald-400' },
@@ -27,11 +31,14 @@ const PRIORITY_STYLES: Record<string, { badge: string; dot: string }> = {
 };
 
 const STATUS_STYLES: Record<string, { badge: string; dot: string }> = {
+  NEW: { badge: 'bg-blue-100 text-blue-700 border border-blue-200', dot: 'bg-blue-400' },
+  ASSIGNED: { badge: 'bg-indigo-100 text-indigo-700 border border-indigo-200', dot: 'bg-indigo-400' },
   OPEN: { badge: 'bg-blue-100 text-blue-700 border border-blue-200', dot: 'bg-blue-400' },
   IN_PROGRESS: { badge: 'bg-orange-100 text-orange-700 border border-orange-200', dot: 'bg-orange-400' },
   WAITING_ON_CUSTOMER: { badge: 'bg-slate-100 text-slate-700 border border-slate-200', dot: 'bg-slate-400' },
   RESOLVED: { badge: 'bg-green-100 text-green-700 border border-green-200', dot: 'bg-green-400' },
   CLOSED: { badge: 'bg-gray-100 text-gray-600 border border-gray-200', dot: 'bg-gray-400' },
+  REOPENED: { badge: 'bg-purple-100 text-purple-700 border border-purple-200', dot: 'bg-purple-400' },
   PENDING: { badge: 'bg-yellow-100 text-yellow-700 border border-yellow-200', dot: 'bg-yellow-400' },
 };
 
@@ -241,28 +248,95 @@ function FilePreviewModal({ url, filename, mimeType, fileSize, onClose }: FilePr
 export function TicketDetailPage() {
   const { ticketId } = useParams<{ ticketId: string }>();
   const navigate = useNavigate();
+  const { user } = useAuth();
 
   const [ticket, setTicket] = useState<TicketDetail | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [previewAttachment, setPreviewAttachment] = useState<TicketAttachmentDetail | null>(null);
+  const [actionError, setActionError] = useState<string | null>(null);
+  const [actionLoading, setActionLoading] = useState(false);
+
+  const [distributeOpen, setDistributeOpen] = useState(false);
+  const [agents, setAgents] = useState<AuthUser[]>([]);
+  const [selectedAgentId, setSelectedAgentId] = useState('');
+  const [distributeReason, setDistributeReason] = useState('');
+
+  const loadTicket = async () => {
+    if (!ticketId) return;
+    setLoading(true);
+    setError(null);
+    try {
+      const result = await apiClient<{ data: TicketDetail }>(`/api/tickets/${ticketId}`);
+      setTicket(result.data);
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'Unknown error');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    if (!ticketId) return;
-    const loadTicket = async () => {
-      setLoading(true);
-      setError(null);
-      try {
-        const result = await apiClient<{ data: TicketDetail }>(`/api/tickets/${ticketId}`);
-        setTicket(result.data);
-      } catch (err: unknown) {
-        setError(err instanceof Error ? err.message : 'Unknown error');
-      } finally {
-        setLoading(false);
-      }
-    };
     loadTicket();
   }, [ticketId]);
+
+  const canDistribute =
+    !!ticket &&
+    (ticket.status === 'NEW' || ticket.status === 'REOPENED') &&
+    !!user &&
+    (user.role === 'ADMIN' ||
+      (user.role === 'DISTRIBUTOR' && ticket.assignedTo?.userId === user.userId));
+
+  const canReturn =
+    !!ticket &&
+    !!user &&
+    user.role === 'AGENT' &&
+    ticket.assignedTo?.userId === user.userId &&
+    !!ticket.distributedBy?.userId &&
+    ticket.status !== 'NEW' &&
+    ticket.status !== 'CLOSED';
+
+  const openDistributeModal = async () => {
+    setActionError(null);
+    setDistributeOpen(true);
+    setSelectedAgentId('');
+    setDistributeReason('');
+    try {
+      const results = await userApi.search('', 'AGENT');
+      setAgents(results);
+    } catch {
+      setAgents([]);
+    }
+  };
+
+  const handleDistribute = async () => {
+    if (!ticketId || !selectedAgentId) return;
+    setActionLoading(true);
+    setActionError(null);
+    try {
+      const updated = await ticketApi.assign(ticketId, selectedAgentId, distributeReason || undefined);
+      setTicket(updated);
+      setDistributeOpen(false);
+    } catch (err: unknown) {
+      setActionError(err instanceof Error ? err.message : 'Failed to distribute ticket');
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  const handleReturn = async () => {
+    if (!ticketId) return;
+    setActionLoading(true);
+    setActionError(null);
+    try {
+      const updated = await ticketApi.returnToDistributor(ticketId);
+      setTicket(updated);
+    } catch (err: unknown) {
+      setActionError(err instanceof Error ? err.message : 'Failed to return ticket');
+    } finally {
+      setActionLoading(false);
+    }
+  };
 
   if (loading) {
     return (
@@ -312,10 +386,37 @@ export function TicketDetailPage() {
             <p className="text-xs text-gray-400 font-mono">{ticket.ticketId}</p>
           </div>
         </div>
-        <div className="flex items-center gap-4 text-gray-400">
-          <X size={20} className="cursor-pointer hover:text-red-500" onClick={() => navigate(-1)} />
+        <div className="flex items-center gap-2">
+          {canDistribute && (
+            <button
+              type="button"
+              onClick={openDistributeModal}
+              className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-semibold bg-[#433878] text-white hover:bg-[#372e66]"
+            >
+              <UserPlus size={16} />
+              Assign to agent
+            </button>
+          )}
+          {canReturn && (
+            <button
+              type="button"
+              onClick={handleReturn}
+              disabled={actionLoading}
+              className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-semibold border border-amber-200 text-amber-700 hover:bg-amber-50 disabled:opacity-60"
+            >
+              <Undo2 size={16} />
+              Return to distributor
+            </button>
+          )}
+          <X size={20} className="cursor-pointer text-gray-400 hover:text-red-500" onClick={() => navigate(-1)} />
         </div>
       </div>
+
+      {actionError && (
+        <div className="mx-6 mt-3 rounded-lg border border-red-200 bg-red-50 px-4 py-2 text-sm text-red-700">
+          {actionError}
+        </div>
+      )}
 
       {/* ── Body ── */}
       <div className="flex flex-1 overflow-hidden">
@@ -432,6 +533,56 @@ export function TicketDetailPage() {
               </div>
             )}
 
+            {/* Assignment tenure */}
+            {ticket.assignmentHistory && ticket.assignmentHistory.length > 0 && (
+              <div>
+                <SectionHeading label="Assignment History" />
+                <div className="space-y-2">
+                  {ticket.assignmentHistory.map((h, i) => (
+                    <div key={i} className="flex items-start gap-3 text-sm">
+                      <User size={14} className="mt-0.5 text-sky-300 shrink-0" />
+                      <div>
+                        <span className="font-medium text-gray-700">{h.name}</span>
+                        <span className="text-gray-400 mx-2">·</span>
+                        <span className="text-gray-500">{h.action}</span>
+                        <span className="text-gray-400 mx-2">·</span>
+                        <span className="text-gray-400">
+                          {formatDate(h.fromAt)}
+                          {h.toAt ? ` → ${formatDate(h.toAt)}` : ' → present'}
+                        </span>
+                        {h.durationMinutes != null && (
+                          <>
+                            <span className="text-gray-400 mx-2">·</span>
+                            <span className="text-gray-500">{h.durationMinutes} min</span>
+                          </>
+                        )}
+                        {h.reason && <p className="text-xs text-gray-400 mt-0.5">{h.reason}</p>}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* SLA events */}
+            {ticket.slaEvents && ticket.slaEvents.length > 0 && (
+              <div>
+                <SectionHeading label="SLA Events" />
+                <div className="space-y-2">
+                  {ticket.slaEvents.map((e, i) => (
+                    <div key={i} className="flex items-start gap-3 text-sm">
+                      <Clock size={14} className="mt-0.5 text-red-300 shrink-0" />
+                      <div>
+                        <span className="font-medium text-gray-700">{e.eventType}</span>
+                        <span className="text-gray-400 mx-2">·</span>
+                        <span className="text-gray-400">{formatDate(e.triggeredAt)}</span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
           </div>
         </div>
 
@@ -479,12 +630,18 @@ export function TicketDetailPage() {
               {ticket.assignedTo ? (
                 <div>
                   <p className="text-sm font-semibold text-gray-800">{ticket.assignedTo.name}</p>
+                  <p className="text-xs text-gray-400 mt-0.5">{ticket.assignedTo.role}</p>
                   {ticket.assignedAt && (
                     <p className="text-xs text-gray-400 mt-0.5">Since {formatDate(ticket.assignedAt)}</p>
                   )}
+                  {ticket.distributedBy && (
+                    <p className="text-xs text-gray-400 mt-1">
+                      Distributed by {ticket.distributedBy.name}
+                    </p>
+                  )}
                 </div>
               ) : (
-                <span className="text-sm text-gray-400 italic">Unassigned</span>
+                <span className="text-sm text-gray-400 italic">No holder</span>
               )}
             </div>
           </SideCard>
@@ -604,6 +761,66 @@ export function TicketDetailPage() {
           </Link>
         </div>
       </div>
+
+      {distributeOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
+          <div className="w-full max-w-md rounded-xl bg-white shadow-xl">
+            <div className="flex items-center justify-between border-b border-gray-100 px-6 py-4">
+              <h2 className="text-lg font-bold text-gray-900">Assign to agent</h2>
+              <button type="button" onClick={() => setDistributeOpen(false)} className="text-gray-400 hover:text-gray-600">
+                <X size={20} />
+              </button>
+            </div>
+            <div className="px-6 py-5 space-y-4">
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-1.5">Agent</label>
+                <select
+                  value={selectedAgentId}
+                  onChange={(e) => setSelectedAgentId(e.target.value)}
+                  className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#433878]/30"
+                >
+                  <option value="">Select agent</option>
+                  {agents.map((agent) => (
+                    <option key={agent.userId} value={agent.userId}>
+                      {agent.firstName} {agent.lastName} ({agent.email})
+                    </option>
+                  ))}
+                </select>
+                {agents.length === 0 && (
+                  <p className="mt-1 text-xs text-amber-600">No active agents found.</p>
+                )}
+              </div>
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-1.5">Reason (optional)</label>
+                <input
+                  type="text"
+                  value={distributeReason}
+                  onChange={(e) => setDistributeReason(e.target.value)}
+                  className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#433878]/30"
+                  placeholder="Why this agent?"
+                />
+              </div>
+              <div className="flex justify-end gap-3 pt-2">
+                <button
+                  type="button"
+                  onClick={() => setDistributeOpen(false)}
+                  className="px-4 py-2 rounded-lg text-sm font-semibold text-gray-600 hover:bg-gray-100"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  onClick={handleDistribute}
+                  disabled={actionLoading || !selectedAgentId}
+                  className="px-4 py-2 rounded-lg text-sm font-semibold bg-[#433878] text-white hover:bg-[#372e66] disabled:opacity-60"
+                >
+                  {actionLoading ? 'Assigning…' : 'Assign'}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
     </div>
   );

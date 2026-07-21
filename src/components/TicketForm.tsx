@@ -8,7 +8,8 @@ import {
   Paperclip,
   Settings, Shield,
   Square,
-  Upload, User,
+  Upload,
+  User,
   X,
   Zap
 } from 'lucide-react';
@@ -21,9 +22,11 @@ interface TicketFormProps {
   initialData?: Ticket;
   onSubmit: (ticket: any) => void;
   onCancel: () => void;
+  /** When false, hides assignee picker (create flow uses auto-routing). Default true for edit. */
+  showAssignee?: boolean;
 }
 
-export const TicketForm: React.FC<TicketFormProps> = ({ initialData, onSubmit, onCancel }) => {
+export const TicketForm: React.FC<TicketFormProps> = ({ initialData, onSubmit, onCancel, showAssignee = true }) => {
   const [categories, setCategories] = useState<ComplaintCategoryResponse[]>([]);
   const [fetchingCategories, setFetchingCategories] = useState(true);
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
@@ -328,7 +331,8 @@ export const TicketForm: React.FC<TicketFormProps> = ({ initialData, onSubmit, o
             </div>
           </div>
 
-          {/* Assignee */}
+          {/* Assignee — only for edit flows; create auto-routes to category distributor */}
+          {showAssignee && (
           <div className="space-y-3">
             <label className="text-gray-900 font-bold text-sm">Assignee</label>
             <div className="relative group">
@@ -344,6 +348,13 @@ export const TicketForm: React.FC<TicketFormProps> = ({ initialData, onSubmit, o
               <ChevronDown size={18} className="text-gray-400 absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none" />
             </div>
           </div>
+          )}
+
+          {!showAssignee && (
+            <div className="rounded-xl border border-emerald-100 bg-emerald-50/60 px-4 py-3 text-sm text-emerald-800">
+              This ticket will be automatically routed to the distributor for the selected category.
+            </div>
+          )}
 
           {/* Tags */}
           <div className="space-y-3">

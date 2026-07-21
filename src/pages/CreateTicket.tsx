@@ -19,7 +19,6 @@ export function CreateTicket() {
         complaintCategoryId: data.complaintCategoryId,
         priority: data.priority,
         createdByUserId: data.createdByUserId,
-        assignedToUserId: data.assignedToUserId || null,
         tags: data.tags || [],
         customFields: {},
       };
@@ -68,6 +67,7 @@ export function CreateTicket() {
       )}
 
       <TicketForm
+        showAssignee={false}
         onSubmit={handleSubmit}
         onCancel={() => navigate('/')}
       />
